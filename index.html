@@ -487,6 +487,7 @@ function drawGarden() {
     const smile = () => dots([[-3,3],[-2,4],[-1,4],[0,4],[1,4],[2,3]]);
     if (o.face === "smile") { dots([[-5,0],[-4,0],[-5,1],[-4,1],[2,0],[3,0],[2,1],[3,1]]); dots([[-5,0],[2,0]], "#fff"); blush(); smile(); }
     if (o.face === "tongue") { dots([[-5,0],[-4,0],[-5,1],[-4,1],[2,0],[3,0],[2,1],[3,1]]); blush(); smile(); dots([[-1,5],[0,5],[-1,6],[0,6]], "#ff4f78"); }
+    if (o.face === "jellycat") { dots([[-4,-4],[-3,-4],[-4,-3],[-3,-3],[3,-4],[4,-4],[3,-3],[4,-3]]); dots([[-4,-4],[3,-4]], "#fff"); dots([[-2,0],[1,0],[-1,1],[0,1]]); dots([[-6,-2],[-5,-2],[5,-2],[6,-2]], "#ffb6c1"); }
     if (o.face === "shock") { dots([[-5,-1],[-4,-1],[-5,0],[-4,0],[-5,1],[-4,1],[2,-1],[3,-1],[2,0],[3,0],[2,1],[3,1]]); dots([[-5,-1],[2,-1]], "#fff"); dots([[-1,4],[0,4],[-2,5],[1,5],[-2,6],[1,6],[-1,7],[0,7]]); dots([[-1,5],[0,5],[-1,6],[0,6]], "#7a1f3a"); blush(); }
     if (o.face === "shades") { for (let x = -6; x <= 5; x++) for (let y = -1; y <= 1; y++) if (x !== -1 && x !== 0 || y === -1) P(fx + x, fy + y, K); dots([[-5,-1],[2,-1]], "#fff"); dots([[-1,4],[0,4],[1,4],[2,4],[3,3]]); }
     if (o.face === "closed") { dots([[-6,1],[-5,0],[-4,0],[-3,1],[1,1],[2,0],[3,0],[4,1]]); blush(); dots([[-2,3],[-1,4],[0,4],[1,3]]); }
@@ -495,7 +496,7 @@ function drawGarden() {
   const defs = [  // 左邊一束 + 右邊一束，向內扇形
     { shape: "heart",   col: "pink",   face: "smile",  len: 20, ax: 62,  a: -22, d: "-0.2s" },
     { shape: "ellipse", col: "lime",   face: "tongue", len: 34, ax: 64,  a: 6,   d: "-1.1s" },
-    { shape: "star",    col: "lilac",  face: "shades", len: 26, ax: 66,  a: 30,  d: "-1.8s" },
+    { shape: "star",    col: "lilac",  face: "jellycat", len: 26, ax: 66,  a: 30,  d: "-1.8s" },
     { shape: "cat",     col: "silver", face: "shades",  len: 30, ax: 454, a: -30, d: "-0.7s" },
     { shape: "ellipse", col: "blue",   face: "closed", len: 22, ax: 456, a: -6,  d: "-1.5s" },
     { shape: "ellipse", col: "yellow", face: "shock",  len: 34, ax: 458, a: 22,  d: "-2.1s" }
