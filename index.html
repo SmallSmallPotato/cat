@@ -143,8 +143,8 @@ const SCRIPT = [
 
 /* 離開畫面（或者離開頁面一陣）再返嚟，會見到佢喺度做以下其中一樣 */
 const SPECIALS = [
-  { img: "sleep", texts: ["「Zzz... 呼嚕嚕...（睡得好香）」", "「Zzz...」"] },
-  { img: "lying", texts: ["「地板涼涼的，躺平最舒服～」", "「……（攤開）」"] },
+  { img: "sleep", texts: ["「Zzz... 呼嚕嚕...（反肚大睡）」", "「Zzz...」"] },
+  { img: "lying", texts: ["「地板涼涼的，躺平最舒服～」", "「……?」"] },
   { img: "poop", texts: ["「嗯……（埋沙子中）」", "「……請不要偷看。」"] },
   { img: "water", texts: ["「咕嚕咕嚕……喝水水！」", "「咕嚕咕嚕……」"] },
   { img: "fear", texts: ["「嗚哇……剛剛好像有聲音！」", "「怕怕……」"] },
@@ -514,7 +514,7 @@ function drawGarden() {
   const cols = ["#CBA3B2", "#8F9779", "#B76E79", "#7D8B99", "#CD7F32", "#D8C06A", "#8A8493", "#B87333"];
   [..."Zita 生日快樂～"].forEach((ch, i) => { const sp = document.createElement("span"); sp.textContent = ch; sp.style.color = cols[i % cols.length]; sp.style.setProperty("--t", (i * 0.12) + "s"); bn.appendChild(sp); });
   bob.appendChild(bn);
-  [[10,5,"0s"],[300,10,".4s"],[500,60,".8s"],[240,120,".2s"],[40,150,".6s"],[490,170,"1s"]].forEach(([x, y, t]) => {
+  [[10,10,"0s"],[300,10,".4s"],[500,60,".8s"],[240,120,".2s"],[40,150,".6s"],[490,170,"1s"]].forEach(([x, y, t]) => {
     const sp = document.createElement("div"); sp.className = "sp"; sp.style.left = x + "px"; sp.style.top = y + "px"; sp.style.setProperty("--t", t); bob.appendChild(sp);
   });
   document.getElementById("stage").appendChild(el);
