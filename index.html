@@ -592,24 +592,8 @@ function drawGarden() {
   for (let x = 0; x < lw; x++) {
     const h = 8 + 5 * Math.sin(x / 13) + 3 * Math.sin(x / 5.3);
     R(x, H0 - h, 1, h + 4, "#9bd08a"); R(x, H0 - h, 1, 1, "#b4dd9e");
-  }
-  // 生日旗串
-  const flagCols = ["#ff7ac8", "#ffd23f", "#7fe0b0", "#6ec9ff", "#c3a6ff", "#ff9a3c"];
-  const bunting = (y0, sag, gap, off) => {
-    const yAt = x => y0 + sag * 4 * (x / lw) * (1 - x / lw);
-    for (let x = 0; x < lw; x++) P(x, Math.round(yAt(x)), "#8a6a8a");
-    let i = off;
-    for (let x = 3; x < lw - 2; x += gap, i++) {
-      const y = Math.round(yAt(x)) + 1, col = flagCols[i % flagCols.length];
-      for (let r = 0; r < 6; r++) {
-        const hw = Math.round(2.4 * (1 - r / 6.5));
-        for (let k = -hw; k <= hw; k++) P(x + k, y + r, col);
-        P(x - hw, y + r, "rgba(0,0,0,.14)");
-      }
-      R(x - 2, y, 5, 1, "rgba(255,255,255,.4)");
-    }
   };
-  bunting(5, 7, 7, 0); bunting(14, 10, 8, 3);
+    
   // 樹（有櫻花樹）
   for (let x = -4; x < lw + 8; x += 12 + Math.floor(rnd() * 10)) {
     const rad = 7 + Math.floor(rnd() * 4), cy = H0 - rad - 2 + Math.floor(rnd() * 3), pink = rnd() < 0.38;
