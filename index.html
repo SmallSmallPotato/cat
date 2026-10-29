@@ -8,7 +8,7 @@
 <style>
   :root { --vw: 1200px; }
   html, body { margin: 0; height: 100%; overflow: hidden; }
-  body { font-family: "zpix", "PingFang HK", "Noto Sans TC", "Microsoft JhengHei", monospace; color: #5c4033; background: #6fbf4f;
+  body { font-family: "zpix", "PingFang HK", "Noto Sans TC", "Microsoft JhengHei", monospace; color: #4A3B32; background: #87C35B;
     -webkit-tap-highlight-color: transparent; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
   #stage { position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden; }
   canvas { image-rendering: pixelated; }
@@ -99,14 +99,15 @@
   #bubble { position: absolute; left: 0; top: 0; z-index: 4000; display: none; pointer-events: none;
     width: max-content; max-width: min(72vw, 280px); will-change: transform; }
   /* 1. 對話框與提示框：升級為雙層精緻邊框與溫暖陰影 */
-  #bi { font-size: 14px; font-weight: bold; line-height: 1.45; text-align: center;
-  background: #FFFDF5; 
-  border: 2px solid #6E4A36; 
-  box-shadow: 3px 3px 0px #CBB299, inset 0 0 0 1px #FFFFFF; 
-  padding: 5px 13px;
-  border-radius: 2px; }
+  #bi { font-size: 14px; font-weight: bold; line-height: 1.5; text-align: center;
+  background: #FFFDF8; 
+  border: 2px solid #5C3A21; 
+  box-shadow: 3px 3px 0px rgba(92, 58, 33, 0.25), inset 0 0 0 2px #FFFFFF; 
+  padding: 6px 14px;
+  border-radius: 3px;
+  color: #4A3B32; }
   #bi::after { content: ""; position: absolute; left: calc(50% + var(--tail, 0px)); bottom: -7px; width: 8px; height: 8px; margin-left: -4px;
-  background: #FFFDF5; border-right: 2px solid #6E4A36; border-bottom: 2px solid #6E4A36; transform: rotate(45deg); }
+  background: #FFFDF8; border-right: 2px solid #5C3A21; border-bottom: 2px solid #5C3A21; transform: rotate(45deg); }
 
   #hint { position: fixed; left: 50%; bottom: calc(10px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 6000;
     font-size: 12px; font-weight: bold; white-space: nowrap; pointer-events: none;
@@ -520,7 +521,7 @@ function drawGarden() {
   const H0 = Math.round(0.4 * lh);
 
   // 天空
-  const sky = ["#8fd3f0", "#a5dcf3", "#bde6f5", "#d3eff6", "#e6f6f2"];
+  const sky = ["#C1E3FF", "#D4ECFF", "#EAF5FF", "#F4F9FF", "#FFF4EC"];
   for (let y = 0; y < H0 + 6; y++) {
     const k = Math.min(4, Math.floor(y / (H0 / 5)));
     const edge = y % Math.ceil(H0 / 5) >= Math.ceil(H0 / 5) - 2 && k < 4;
@@ -575,7 +576,7 @@ function drawGarden() {
   const L0 = H0 + 9;
   for (let y = L0; y < lh; y++) {
     const t = (y - L0) / (lh - L0), band = Math.floor(Math.pow(t, 0.75) * 12);
-    const a = t < 0.3 ? "#5fb34a" : "#68bb4e", b = t < 0.3 ? "#58aa45" : "#5fb34a";
+    const a = t < 0.3 ? "#72C655" : "#7ED061", b = t < 0.3 ? "#66B84B" : "#72C655";
     R(0, y, lw, 1, band % 2 ? a : b);
   }
   for (let i = 0; i < lw * 6; i++) {
