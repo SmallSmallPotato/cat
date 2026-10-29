@@ -117,6 +117,50 @@
   #bi::after { content: ""; position: absolute; left: calc(50% + var(--tail, 0px)); bottom: -7px; width: 8px; height: 8px; margin-left: -4px;
     background: rgba(255,253,245,.97); border-right: 2px solid #5c4033; border-bottom: 2px solid #5c4033; transform: rotate(45deg); }
 
+  /* ---------- 流星許願卡（專屬對話框） ---------- */
+  #wish { position: absolute; left: 0; top: 0; z-index: 4100; display: none; pointer-events: none;
+    width: max-content; max-width: min(80vw, 300px); will-change: transform; }
+  #wi { position: relative; box-sizing: border-box; text-align: center; color: #fff6dc; overflow: visible;
+    transform-origin: 50% 100%; padding: 7px 18px 12px; --edge: #ffe3a1; --glow: 255,217,138; --hold: 6500ms;
+    background:
+      radial-gradient(1px 1px at 12% 28%, #fff 99%, transparent), radial-gradient(1px 1px at 84% 22%, #fff 99%, transparent),
+      radial-gradient(1px 1px at 68% 78%, #ffe9b0 99%, transparent), radial-gradient(1px 1px at 26% 82%, #fff 99%, transparent),
+      radial-gradient(1.5px 1.5px at 92% 64%, #ffd9e8 99%, transparent), radial-gradient(1.5px 1.5px at 6% 60%, #cfe0ff 99%, transparent),
+      linear-gradient(160deg, #262a66 0%, #44357a 55%, #74457f 100%);
+    border: 2px solid var(--edge); outline: 2px solid #2a1f45; outline-offset: 0;
+    box-shadow: 0 0 0 4px rgba(var(--glow), .18), 0 0 22px rgba(var(--glow), .55), 3px 4px 0 rgba(20,10,40,.45); }
+  #wi::after { content: ""; position: absolute; left: calc(50% + var(--tail, 0px)); bottom: -8px; width: 10px; height: 10px; margin-left: -5px;
+    background: #6a4480; border-right: 2px solid var(--edge); border-bottom: 2px solid var(--edge); transform: rotate(45deg); }
+  #wi .wt { font-size: 11px; letter-spacing: 3px; color: var(--edge); margin-bottom: 2px; text-shadow: 0 0 6px rgba(var(--glow), .8); }
+  #wi .wx { font-size: 14px; font-weight: bold; line-height: 1.65; text-shadow: 0 1px 0 rgba(20,10,40,.6); }
+  #wi .wbar { position: absolute; left: 10px; right: 10px; bottom: 4px; height: 2px; background: rgba(255,255,255,.14); overflow: hidden; }
+  #wi .wbar::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(var(--glow), .2), rgb(var(--glow)));
+    transform-origin: 0 50%; animation: wbar var(--hold) linear forwards; }
+  @keyframes wbar { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+  #wi .sp { position: absolute; font-style: normal; font-size: 12px; line-height: 1; color: var(--edge); text-shadow: 0 0 8px rgba(var(--glow), .95);
+    animation: wtw 1.8s ease-in-out infinite; }
+  #wi .sp.a { left: -8px; top: -9px; } #wi .sp.b { right: -9px; top: -5px; font-size: 10px; animation-delay: -.6s; }
+  #wi .sp.c { left: -6px; bottom: 6px; font-size: 9px; animation-delay: -1.1s; } #wi .sp.d { right: -8px; bottom: 4px; animation-delay: -.3s; }
+  @keyframes wtw { 0%,100% { transform: scale(.55) rotate(0); opacity: .45; } 50% { transform: scale(1.25) rotate(45deg); opacity: 1; } }
+  #wi::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0;
+    background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.28) 50%, transparent 65%); background-size: 250% 100%; }
+  #wi.in::before { animation: wsheen 1.3s .25s ease-out 1; }
+  @keyframes wsheen { 0% { opacity: 1; background-position: 120% 0; } 100% { opacity: 1; background-position: -120% 0; } }
+  #wi.gold { --edge: #ffd75a; --glow: 255,200,70;
+    background:
+      radial-gradient(1.5px 1.5px at 14% 30%, #fff6b0 99%, transparent), radial-gradient(1.5px 1.5px at 86% 26%, #fff 99%, transparent),
+      radial-gradient(1px 1px at 70% 80%, #fff6b0 99%, transparent), radial-gradient(1px 1px at 24% 78%, #fff 99%, transparent),
+      linear-gradient(160deg, #3a2468 0%, #7a3f7e 55%, #c06a45 100%);
+    box-shadow: 0 0 0 4px rgba(var(--glow), .25), 0 0 30px rgba(var(--glow), .75), 3px 4px 0 rgba(20,10,40,.45); animation: wpulse 1.6s ease-in-out infinite; }
+  #wi.gold::after { background: #b4654a; }
+  #wi.gold .sp { font-size: 14px; }
+  @keyframes wpulse { 50% { box-shadow: 0 0 0 5px rgba(var(--glow), .35), 0 0 40px rgba(var(--glow), .95), 3px 4px 0 rgba(20,10,40,.45); } }
+  #wi.sleep { --edge: #b9c8f0; --glow: 150,175,235; color: #dfe8ff;
+    background: linear-gradient(160deg, #1d2552 0%, #2f3b72 100%); }
+  #wi.sleep::after { background: #2b366a; }
+  #wi.sleep .wx { font-weight: normal; opacity: .9; }
+  @media (prefers-reduced-motion: reduce) { #wi .sp, #wi.gold, #wi.in::before { animation: none; } }
+
   /* ---------- 色調層、路燈光暈、時鐘 ---------- */
   #tint { z-index: 3000; mix-blend-mode: multiply; }
   .glow { position: absolute; z-index: 3100; pointer-events: none; mix-blend-mode: screen; border-radius: 50%;
@@ -152,6 +196,7 @@
     <div id="sprite"><div id="catBody"><img id="img" alt="貓咪"></div></div>
   </div>
   <div id="bubble"><div id="bi"></div></div>
+  <div id="wish"><div id="wi"><i class="sp a">✦</i><i class="sp b">✦</i><i class="sp c">✦</i><i class="sp d">✦</i><div class="wt"></div><div class="wx"></div><div class="wbar"></div></div></div>
   <canvas id="tint"></canvas>
   <canvas id="fx"></canvas>
 </div>
@@ -266,6 +311,7 @@ function face(dx) {
 }
 function say(t) {
   curText = t || "";
+  if (wishOn) { bubble.style.display = "none"; return; }
   if (!t) { bubble.style.display = "none"; return; }
   const changed = bi.textContent !== t;
   bi.textContent = t;
@@ -276,7 +322,19 @@ function say(t) {
   ], { duration: 260, easing: "ease-out" });
 }
 /* 對話框跟住貓頭，夾喺畫面入面 */
+function layoutWish() {
+  if (!wishOn) return;
+  const S = size(), W = innerWidth, wi = document.getElementById("wi");
+  const cx = pos.x + S / 2, top = pos.y + S - S * curK;
+  const half = wi.offsetWidth / 2;
+  const lo = half + 10 - cx, hi = W - half - 10 - cx;
+  const shift = Math.min(hi, Math.max(lo, 0));
+  const tail = clamp(-shift, -(half - 16), Math.max(0, half - 16));
+  wishEl.style.transform = "translate3d(" + (cx + shift) + "px," + (top - 4) + "px,0) translate(-50%,-100%)";
+  wi.style.setProperty("--tail", tail + "px");
+}
 function layoutBubble() {
+  layoutWish();
   if (bubble.style.display === "none") return;
   const S = size(), W = innerWidth;
   const cx = pos.x + S / 2, top = pos.y + S - S * curK;
@@ -957,17 +1015,48 @@ const WISHES = [
 ].sort(() => Math.random() - 0.5);
 const SLEEP_TALK = ["「Zzz…流星…小魚乾…Zzz」", "「（夢話）Zita…生日快樂…Zzz」", "「Zzz…願望…蛋糕…再來一塊…」"];
 const GOLD_LINE = "「金色流星！！一年才一次，Zita 的願望一定成真！」";
-let starCount = 0, wishIdx = 0;
+let starCount = 0, wishIdx = 0, wishOn = false, wishTimer = 0;
+const wishEl = document.getElementById("wish"), wiEl = document.getElementById("wi");
+const wtEl = wiEl.querySelector(".wt"), wxEl = wiEl.querySelector(".wx");
+function hideWish(restore) {
+  if (!wishOn) return;
+  wishOn = false; clearTimeout(wishTimer);
+  wiEl.classList.remove("in");
+  const a = wiEl.animate([{ opacity: 1, transform: "translateY(0)" }, { opacity: 0, transform: "translateY(-8px) scale(.96)" }], { duration: 380, easing: "ease-in" });
+  const done = () => { if (!wishOn) wishEl.style.display = "none"; };
+  a.onfinish = done; a.oncancel = done;
+  if (restore) say(curText);
+}
+function showWish(line, kind, ms) {
+  clearTimeout(wishTimer);
+  wiEl.className = kind === "gold" ? "gold" : kind === "sleep" ? "sleep" : "";
+  wtEl.textContent = kind === "gold" ? "★ 金色流星 ★" : kind === "sleep" ? "💤 夢話 💤" : "✦ 流星許願 ✦";
+  wxEl.textContent = line;
+  wiEl.style.setProperty("--hold", ms + "ms");
+  const wbar = wiEl.querySelector(".wbar"); wbar.style.display = "none"; void wbar.offsetWidth; wbar.style.display = "";
+  wishOn = true; bubble.style.display = "none";
+  wishEl.style.display = "block"; layoutWish();
+  wiEl.classList.add("in");
+  wiEl.animate([
+    { transform: "scale(.5) rotate(-4deg)", opacity: 0 },
+    { transform: "scale(1.08) rotate(1deg)", opacity: 1, offset: .6 },
+    { transform: "scale(1) rotate(0)", opacity: 1 }
+  ], { duration: 520, easing: "cubic-bezier(.2,.9,.3,1.2)" });
+  wishTimer = setTimeout(() => hideWish(true), ms);
+}
 function onShootingStar(gold) {
   starCount++;
   if (catAway) return;
   const asleep = curKey === "sleep", S = size();
   const line = asleep ? pick(SLEEP_TALK) : gold ? GOLD_LINE : WISHES[wishIdx++ % WISHES.length];
-  const keepKey = curKey, keepText = curText, still = !asleep && !moving;
+  const kind = asleep ? "sleep" : gold ? "gold" : "wish";
+  /* 停留時間：按字數計，確保讀得晒（金色最長） */
+  const ms = gold ? 9500 : asleep ? 5500 : Math.min(8500, Math.max(6000, 3200 + line.length * 150));
+  const keepKey = curKey, still = !asleep && !moving;
   if (still) setImg("curious");
-  say(line);
+  showWish(line, kind, ms);
   if (gold) { const cx = pos.x + S / 2, cy = pos.y + S * (1 - curK * 0.8); heartsAt(cx, cy, 7); confettiAt(cx, cy - 20, 30); }
-  setTimeout(() => { if (curText === line) { if (still && curKey === "curious") setImg(keepKey); say(keepText); } }, gold ? 4200 : 3000);
+  setTimeout(() => { if (still && curKey === "curious") setImg(keepKey); }, Math.min(ms, 4200));
 }
 
 /* ---------- 路燈 / 蛋糕光暈 ---------- */
@@ -1186,7 +1275,7 @@ async function leave(tok) {
   const S = size(), p1 = toTL(pathCx(0.9) + rand(-0.1, 0.1), 0.9);
   const tx = pos.x < innerWidth / 2 ? -S - 60 : innerWidth + 60;
   await followPath(route(p1).concat([{ x: tx, y: p1.y }]), tok);
-  say(""); catAway = true;
+  say(""); hideWish(false); catAway = true;
 }
 
 /* 再返嚟時：已經喺度做特別嘅事 */
