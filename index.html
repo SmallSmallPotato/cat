@@ -15,7 +15,45 @@
   #bg, #fx { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
   #bg { z-index: 4; }
   #fx { z-index: 5000; pointer-events: none; }
+  let isBlownOut = false;
 
+  function triggerWishesEffect() {
+    if (isBlownOut) return; // 避免重複觸發
+    isBlownOut = true;
+
+    // 1. 吹熄蠟燭動畫
+    candlesOut();
+    say("「哇！願望一定會成真！」");
+
+    // 2. 0.8秒後場景轉暗 1 秒
+    setTimeout(() => {
+      const darkOverlay = document.getElementById("dark-overlay");
+      const hbdText = document.getElementById("hbd-sky-text");
+
+      darkOverlay.classList.add("active");
+
+      // 3. 爆發金色彩帶 (利用現有的 confettiAt 函數)
+      const S = size();
+      const cx = CAKE.xf * innerWidth;
+      const cy = CAKE.f * innerHeight;
+      confettiAt(cx, cy - 30, 60); // 炸出大量金色彩帶
+
+      // 4. 天空浮現 "ZITA HBD" 字樣，周圍伴隨閃爍星星
+      setTimeout(() => {
+        hbdText.classList.add("show");
+        heartsAt(innerWidth / 2, innerHeight / 3, 10); // 加點愛心點綴
+      }, 500);
+
+      // 5. 4秒後恢復正常亮度與場景
+      setTimeout(() => {
+        darkOverlay.classList.remove("active");
+        hbdText.classList.remove("show");
+        isBlownOut = false;
+        candlesLit(); // 恢復蠟燭點燃（可選）
+      }, 4500);
+
+    }, 800);
+  }
   /* ---------- 太陽 + 光線 ---------- */
   :root { --sw: clamp(62px, 15vw, 104px); }
   #sky, #stars, #tint { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
@@ -181,6 +219,29 @@
     background: rgba(255,253,245,.9); border: 2px solid #5c4033; box-shadow: 2px 2px 0 #c89666; padding: 3px 12px;
     animation: hintOut 1s ease 8s forwards; }
   @keyframes hintOut { to { opacity: 0; visibility: hidden; } }
+  /* ---------- 吹蠟燭後的特效樣式 ---------- */
+  #dark-overlay {
+    position: fixed; inset: 0; background: #000; z-index: 4500;
+    opacity: 0; pointer-events: none; transition: opacity 1s ease;
+  }
+  #dark-overlay.active { opacity: 0.85; }
+
+  #hbd-sky-text {
+    position: fixed; top: 15%; left: 0; width: 100%; text-align: center;
+    z-index: 4600; opacity: 0; pointer-events: none;
+    font-family: "zpix", monospace; font-size: clamp(24px, 6vw, 48px);
+    color: #fff6b0; text-shadow: 0 0 12px #ffd75a, 0 0 24px #ff9a3c;
+    letter-spacing: 6px; transform: scale(0.8);
+    transition: all 1.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  }
+  #hbd-sky-text.show { opacity: 1; transform: scale(1); }
+  #hbd-sky-text span {
+    display: inline-block; animation: hbd-twinkle 1.5s ease-in-out infinite alternate;
+  }
+  @keyframes hbd-twinkle {
+    from { text-shadow: 0 0 8px #ffd75a; transform: translateY(0); }
+    to { text-shadow: 0 0 20px #fff, 0 0 35px #ff6f91; transform: translateY(-4px); }
+  } 
 </style>
 </head>
 <body>
@@ -199,6 +260,9 @@
   <div id="wish"><div id="wi"><i class="sp a">✦</i><i class="sp b">✦</i><i class="sp c">✦</i><i class="sp d">✦</i><div class="wt"></div><div class="wx"></div><div class="wbar"></div></div></div>
   <canvas id="tint"></canvas>
   <canvas id="fx"></canvas>
+  <!-- 點擊蛋糕後的暗屏與星空字容器 -->
+  <div id="dark-overlay"></div>
+  <div id="hbd-sky-text">ZITA HBD ✨</div>
 </div>
 <button id="clock" type="button">🌤️ 清晨</button>
 <div id="hint">點一點貓咪或畫面 ✨　右上角可快轉時間 ⏩</div>
@@ -540,6 +604,12 @@ function buildProps() {
     cakeProp.el.appendChild(fl);
   });
   cakeGlow = document.createElement("div"); cakeGlow.className = "glow cake"; stage.appendChild(cakeGlow);
+  // 讓蛋糕可以被點擊互動
+  cakeProp.el.style.pointerEvents = "auto";
+  cakeProp.el.style.cursor = "pointer";
+  cakeProp.el.addEventListener("click", () => {
+    triggerWishesEffect();
+  });
   layoutProps();
 }
 function candlesLit() {
