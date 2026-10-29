@@ -15,45 +15,7 @@
   #bg, #fx { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
   #bg { z-index: 4; }
   #fx { z-index: 5000; pointer-events: none; }
-  let isBlownOut = false;
 
-  function triggerWishesEffect() {
-    if (isBlownOut) return; // 避免重複觸發
-    isBlownOut = true;
-
-    // 1. 吹熄蠟燭動畫
-    candlesOut();
-    say("「哇！願望一定會成真！」");
-
-    // 2. 0.8秒後場景轉暗 1 秒
-    setTimeout(() => {
-      const darkOverlay = document.getElementById("dark-overlay");
-      const hbdText = document.getElementById("hbd-sky-text");
-
-      darkOverlay.classList.add("active");
-
-      // 3. 爆發金色彩帶 (利用現有的 confettiAt 函數)
-      const S = size();
-      const cx = CAKE.xf * innerWidth;
-      const cy = CAKE.f * innerHeight;
-      confettiAt(cx, cy - 30, 60); // 炸出大量金色彩帶
-
-      // 4. 天空浮現 "ZITA HBD" 字樣，周圍伴隨閃爍星星
-      setTimeout(() => {
-        hbdText.classList.add("show");
-        heartsAt(innerWidth / 2, innerHeight / 3, 10); // 加點愛心點綴
-      }, 500);
-
-      // 5. 4秒後恢復正常亮度與場景
-      setTimeout(() => {
-        darkOverlay.classList.remove("active");
-        hbdText.classList.remove("show");
-        isBlownOut = false;
-        candlesLit(); // 恢復蠟燭點燃（可選）
-      }, 4500);
-
-    }, 800);
-  }
   /* ---------- 太陽 + 光線 ---------- */
   :root { --sw: clamp(62px, 15vw, 104px); }
   #sky, #stars, #tint { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
@@ -268,7 +230,46 @@
 <div id="hint">點一點貓咪或畫面 ✨　右上角可快轉時間 ⏩</div>
 
 <script>
-if (/debug/.test(location.search)) {
+  let isBlownOut = false;
+
+  function triggerWishesEffect() {
+    if (isBlownOut) return; // 避免重複觸發
+    isBlownOut = true;
+
+    // 1. 吹熄蠟燭動畫
+    candlesOut();
+    say("「哇！願望一定會成真！」");
+
+    // 2. 0.8秒後場景轉暗 1 秒
+    setTimeout(() => {
+      const darkOverlay = document.getElementById("dark-overlay");
+      const hbdText = document.getElementById("hbd-sky-text");
+
+      darkOverlay.classList.add("active");
+
+      // 3. 爆發金色彩帶 (利用現有的 confettiAt 函數)
+      const S = size();
+      const cx = CAKE.xf * innerWidth;
+      const cy = CAKE.f * innerHeight;
+      confettiAt(cx, cy - 30, 60); // 炸出大量金色彩帶
+
+      // 4. 天空浮現 "ZITA HBD" 字樣，周圍伴隨閃爍星星
+      setTimeout(() => {
+        hbdText.classList.add("show");
+        heartsAt(innerWidth / 2, innerHeight / 3, 10); // 加點愛心點綴
+      }, 500);
+
+      // 5. 4秒後恢復正常亮度與場景
+      setTimeout(() => {
+        darkOverlay.classList.remove("active");
+        hbdText.classList.remove("show");
+        isBlownOut = false;
+        candlesLit(); // 恢復蠟燭點燃（可選）
+      }, 4500);
+
+    }, 800);
+  }
+  if (/debug/.test(location.search)) {
   window.onerror = function (m, u, l) { var d = document.createElement('div'); d.style.cssText = 'position:fixed;left:0;bottom:0;z-index:99999;background:#fff;color:#c00;font:12px monospace;padding:4px;max-width:100%'; d.textContent = 'Error: ' + m + ' (line ' + l + ')'; document.body.appendChild(d); };
 }
 
