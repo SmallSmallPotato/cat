@@ -238,10 +238,10 @@
   <canvas id="fx"></canvas>
   <div id="dim"></div><canvas id="cele"></canvas><canvas id="gold"></canvas><div id="cakeHint"></div>
 </div>
-<div id="intro"><div id="env"></div><p>點一下開啟<small>🔊 建議開聲音</small></p></div>
+<div id="intro"><div id="env"></div><p>點擊開啟<small>🔊 建議開聲音 (手機要開啟鈴聲掣)</small></p></div>
 <button id="mute" type="button">🔊</button>
 <button id="clock" type="button">🌤️ 清晨</button>
-<div id="hint">點一點貓咪或畫面 ✨　右上角可快轉時間 ⏩</div>
+<div id="hint"> ✨　右上角可快轉時間 ⏩</div>
 
 <script>
   if (/debug/.test(location.search)) {
@@ -1039,11 +1039,11 @@ function starsTick(t, dt) {
 const WISHES = [
   "「流星！快許願！我要 Zita Happy Every Day～」", "「許了許了！願 Zita 食幾多蛋糕都唔肥！」", "「流星流星～請給 Zita 一整年的好運氣！」",
   "「我的願望：小魚乾自由……順便祝 Zita 生日快樂！」", "「願 Zita 的煩惱，像流星一樣一閃就不見～」",
-  "「第一願：Zita 健康；第二願：Zita 有錢；第三願：分我一半！」", "「Zita you see~ 有流星～」",
+  "「第一願：Zita 健康；第二願：Zita 有錢；第三願：分我一半！」", "「Zita, hurry up and look~ 有流星～」",
   "「許願要小聲講，不然會被貓咪聽到～」", "「叮咚！流星已收到 Zita 的生日願望～」"
 ].sort(() => Math.random() - 0.5);
 const SLEEP_TALK = ["「Zzz…流星…小魚乾…Zzz」", "「（夢話）Zita…生日快樂…Zzz」", "「Zzz…願望…蛋糕…再來一塊…」"];
-const GOLD_LINE = "「金色流星！！一年才一次，Zita 的願望一定成真！」";
+const GOLD_LINE = "「金色流星！！好難得先一次，Zita 嘅願望一定成真！」";
 let starCount = 0, wishIdx = 0, wishOn = false, wishTimer = 0;
 const wishEl = document.getElementById("wish"), wiEl = document.getElementById("wi");
 const wtEl = wiEl.querySelector(".wt"), wxEl = wiEl.querySelector(".wx");
@@ -1264,7 +1264,7 @@ const SCENES = {
     await pose(T, "wave", "「Zita 的生日，要從大大的早晨開始！」", 3000);
   },
   ph_noon: async T => {
-    await pose(T, "happy", "「太陽公公在頭頂了，好暖～」");
+    await pose(T, "happy", "「太陽在頭頂，好暖～」");
     await pose(T, "rich", "「中午啦！吃完飯就吃蛋糕！」");
   },
   ph_afternoon: async T => {
@@ -1272,14 +1272,14 @@ const SCENES = {
     await SCENES.cake(T);
   },
   ph_dusk: async T => {
-    await pose(T, "curious", "「哇……天空變成紫色的了！」");
+    await pose(T, "curious", "「嘩……天空變成紫色的！」");
     await pose(T, "happy", "「像蛋糕上最甜的那層果醬～」");
-    await pose(T, "waiting", "「路燈快要亮了喔～」");
+    await pose(T, "waiting", "「路燈準備著燈了喔～」");
   },
   ph_night: async T => {
-    await pose(T, "wave", "「晚安時間到～路燈都亮起來啦！」", 3000);
+    await pose(T, "wave", "「已經夜晚喇～路燈都著咗！」", 3000);
     await pose(T, "curious", "「星星出來了喵～」");
-    await pose(T, "waiting", "「有點睏了……」");
+    await pose(T, "waiting", "「好眼瞓……」");
     await SCENES.cake(T);
   }
 };
@@ -1360,8 +1360,8 @@ function restart(startWithSpecial) {
 }
 
 /* ========== 互動：點貓咪出愛心，點畫面撒彩紙 ========== */
-const POKES = ["「喵！」", "「呼嚕嚕～」", "「再摸一下～」", "「嘿嘿～」", "「生日快樂喵！」", "「癢癢的～」"];
-const NIGHT_POKES = ["「噓～細聲啲，我睇緊星星」", "「呼嚕……（翻個身）」", "「Good night喵～Zita」", "「再摸一下就睡……」", "「路燈下面最溫暖了～」", "「Zita，今晚的月亮好圓喔」"];
+const POKES = ["「喵！」", "「呼嚕嚕～」", "「收手喇～」", "「嘿嘿～」", "「生日快樂喵！」", "「癢癢的～」", "「笑左，笑埋右～」", "「聽講夜晚會有流星出現喔～」", "「Zatia小姐～」"];
+const NIGHT_POKES = ["「噓～細聲啲，我睇緊星星」", "「呼嚕……（翻個身）」", "「Good night喵～」", "「生日快樂，又大一歲啦喵～」", "「唔好騷擾我瞓覺喇……」", "「路燈下面最溫暖了～」", "「Zita，今晚的月亮好圓喔~」", "「月亮戴瞓覺帽！」"];
 stage.addEventListener("pointerdown", e => {
   if (cat.contains(e.target)) {
     const S = size(), cx = pos.x + S / 2, cy = pos.y + S - S * curK * 0.85;
@@ -1673,11 +1673,11 @@ function openCard() {
 document.getElementById("intro").addEventListener("click", openCard);
 SCENES.ending = async T => {
   storyMode = false;
-  await pose(T, "wave", "「好啦～賀卡到呢度就完咗！Zita，今年都要開心喵～」", 3400);
+  await pose(T, "wave", "「好啦～Zita，今年都要開心喵～」", 3400);
   playSong();
   await pose(T, "happy", "「（唱）祝你生日快樂～♪」", 4400);
   await pose(T, "happy", "「（唱）祝你生日快樂～～♪♪」", 4400);
-  await pose(T, "coax", "「之後可以隨便玩～點點我、點點畫面！」", 3200);
+  await pose(T, "coax", "「可以隨便玩～點點本喵、點點畫面！」", 3200);
 };
 
 /* ========== 啟動 ========== */
