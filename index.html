@@ -185,7 +185,7 @@ const SPECIALS = [
   { img: "lying", texts: ["「地板涼涼的，躺平最舒服～」", "「……?」"] },
   { img: "poop", texts: ["「嗯……（埋沙子中）」", "「……請不要偷看。」"] },
   { img: "water", texts: ["「咕嚕咕嚕……喝水水！」", "「咕嚕咕嚕……」"] },
-  { img: "fear", texts: ["「嗚哇……剛剛好像有聲音！」", "「怕怕……」"] },
+  { img: "fear", texts: ["「嗚哇……啱啱係咩聲咁大聲！」", "「怕怕……」"] },
   { img: "play", texts: ["「抓到你了！喵哈哈～」", "「嘿！嘿！」"] }
 ];
 
@@ -950,10 +950,10 @@ function starsTick(t, dt) {
 
 /* 流星專屬驚喜語錄 */
 const WISHES = [
-  "「流星！快許願！我要 Zita 天天開心～」", "「許了許了！願 Zita 吃多少蛋糕都不會胖！」", "「流星流星～請給 Zita 一整年的好運氣！」",
+  "「流星！快許願！我要 Zita Happy Every Day～」", "「許了許了！願 Zita 食幾多蛋糕都唔肥！」", "「流星流星～請給 Zita 一整年的好運氣！」",
   "「我的願望：小魚乾自由……順便祝 Zita 生日快樂！」", "「願 Zita 的煩惱，像流星一樣一閃就不見～」",
-  "「第一願：Zita 健康；第二願：Zita 有錢；第三願：分我一半！」", "「Zita 你看你看！是為你劃過的流星～」",
-  "「許願要小聲講，不然會被貓咪聽到（我就是貓咪）」", "「叮咚！流星已收到 Zita 的生日願望～」"
+  "「第一願：Zita 健康；第二願：Zita 有錢；第三願：分我一半！」", "「Zita you see~ 有流星～」",
+  "「許願要小聲講，不然會被貓咪聽到～」", "「叮咚！流星已收到 Zita 的生日願望～」"
 ].sort(() => Math.random() - 0.5);
 const SLEEP_TALK = ["「Zzz…流星…小魚乾…Zzz」", "「（夢話）Zita…生日快樂…Zzz」", "「Zzz…願望…蛋糕…再來一塊…」"];
 const GOLD_LINE = "「金色流星！！一年才一次，Zita 的願望一定成真！」";
@@ -1049,13 +1049,13 @@ function nightFx(t, dt, lw, lh, px) {
 const SCENES = {
   greet: async T => {
     await pose(T, "wave", "「Zita，生日快樂喵～！」", 3200);
-    await pose(T, "happy", "「今天要吃大蛋糕！」");
+    await pose(T, "happy", "「今日要食大蛋糕！」");
   },
   stretch: async T => {
     await pose(T, "waiting", "「喵？」");
     await pose(T, "stretch1", "「嗯……伸個懶腰」");
     await pose(T, "stretch2", "「> <！」");
-    await pose(T, "waiting", "「喵？」");
+    await pose(T, "waiting", "「拉筋先～」");
   },
   wander: async T => {
     await goto(T, randPos(), pick(["「去邊度好呢～」", "「巡視一下地盤～」", "「走走走～」", "「再行多兩步～」"]));
@@ -1067,8 +1067,8 @@ const SCENES = {
   },
   cuddle: async T => {
     await pose(T, "curious", "「喵？」");
-    await pose(T, "happy", "「呼嚕嚕～舒服！」");
-    await pose(T, "coax", "「最喜歡你了～」");
+    await pose(T, "happy", "「從前有三隻蝦！哈哈哈！」");
+    await pose(T, "coax", "「Nice to meet u～」");
   },
   groom: async T => {
     await pose(T, "wash", "「舔舔毛，整理儀容～」");
@@ -1077,26 +1077,26 @@ const SCENES = {
   },
   lookout: async T => {
     await pose(T, "waiting", "「嗯……？」");
-    await pose(T, "stand", "「站直瞧瞧外面有什麼。」");
+    await pose(T, "stand", "「企直睇吓出邊有啲咩先。」");
     await pose(T, "wave", "「Hello!」");
-    await pose(T, "stand", "「好像沒有特別的……」");
+    await pose(T, "stand", "「好似冇咩特別……」");
     await pose(T, "waiting", "「坐回原位繼續發呆。」");
   },
   sassy: async T => {
-    await pose(T, "scorn", "「哼……你在看什麼？」");
+    await pose(T, "scorn", "「哼……你睇緊啲咩？」");
     await pose(T, "meow", "「喵喵！快陪我玩啦！」");
-    await pose(T, "angry", "「嘶……不理你了！」");
+    await pose(T, "angry", "「打爆你！」");
     await pose(T, "scorn", "「哼……」");
   },
   cake: async T => {
     candlesLit();
     await goto(T, spotBeside(cakeProp, -1), "「咦？好香的味道～」");
     faceToward(cakeProp);
-    await pose(T, "curious", "「是蛋糕！！」");
-    await pose(T, "happy", "「蠟燭好漂亮～」");
-    await pose(T, "wave", "「Zita，生日快樂！」", 2600);
-    await pose(T, "coax", "「來，許個願望吧～」");
-    await pose(T, "waiting", "「（閉眼許願中……）」", 2000);
+    await pose(T, "curious", "「蛋糕！！」");
+    await pose(T, "happy", "「蠟燭好靚靚～」");
+    await pose(T, "wave", "「Zita，生日快樂呀！」", 2600);
+    await pose(T, "coax", "「許個願望吧～」");
+    await pose(T, "waiting", "「（please close your eyes……）」", 2000);
     setImg("meow"); say("「呼～～！」"); await wait(800, T);
     candlesOut();
     await pose(T, "happy", "「願望一定會實現！」");
@@ -1104,9 +1104,9 @@ const SCENES = {
     candlesLit();
   },
   gift: async T => {
-    await goto(T, spotBeside(giftProp, 1), "「咦？那邊有禮物！」");
+    await goto(T, spotBeside(giftProp, 1), "「咦？有禮物！」");
     faceToward(giftProp);
-    await pose(T, "curious", "「是給我的嗎？」");
+    await pose(T, "curious", "「可以俾我嗎？」");
     await pose(T, "play", "「拆開拆開～！」", 1800);
     await pose(T, "play", "「嘿！嘿！」", 1500);
     const c = propCenter(giftProp); confettiAt(c.x, c.y - 10, 34);
@@ -1117,7 +1117,7 @@ const SCENES = {
     const lp = lampProps.length ? pick(lampProps) : null;
     if (lp) { await goto(T, spotBeside(lp, Math.random() < 0.5 ? -1 : 1), pick(["「路燈下面最暖了～」", "「找個舒服的地方睡覺～」"])); faceToward(lp); }
     await pose(T, "waiting", "「好睏喵……」", 2000);
-    await pose(T, "lying", "「呼啊～（大大的哈欠）」", 2200);
+    await pose(T, "lying", "「呼啊～（大大的喊露）」", 2200);
     const lines = ["「Zzz...（反肚大睡）」", "「Zzz... 呼嚕嚕...」", "「夢到小魚乾……自己游過來了……」", "「Zzz...Zita...生日快樂...Zzz」"];
     const total = rand(9000, 14000); let t = 0, i = 0;
     setImg("sleep");
@@ -1138,13 +1138,13 @@ const SCENES = {
   },
   ph_dawn: async T => {
     await pose(T, "waiting", "「嗯……天邊變粉紅色了？」");
-    await pose(T, "stretch1", "「破曉啦～伸個大懶腰」");
+    await pose(T, "stretch1", "「天光啦～伸個大懶腰」");
     await pose(T, "stretch2", "「> <！」", 1400);
-    await pose(T, "wave", "「Zita，早安！新的一歲，從今天開始～」", 3200);
+    await pose(T, "wave", "「Zita，早呀！新的一歲，從今天開始～」", 3200);
   },
   ph_morning: async T => {
     await pose(T, "happy", "「清晨的空氣，聞起來像剛出爐的蛋糕～」");
-    await pose(T, "wave", "「Zita 的生日，要從大大的早安開始！」", 3000);
+    await pose(T, "wave", "「Zita 的生日，要從大大的早晨開始！」", 3000);
   },
   ph_noon: async T => {
     await pose(T, "happy", "「太陽公公在頭頂了，好暖～」");
@@ -1155,7 +1155,7 @@ const SCENES = {
     await SCENES.cake(T);
   },
   ph_dusk: async T => {
-    await pose(T, "curious", "「哇……天空變成橘子色了！」");
+    await pose(T, "curious", "「哇……天空變成橙色了！」");
     await pose(T, "happy", "「像蛋糕上最甜的那層果醬～」");
     await pose(T, "waiting", "「路燈快要亮了喔～」");
   },
@@ -1241,7 +1241,7 @@ function restart(startWithSpecial) {
 
 /* ========== 互動：點貓咪出愛心，點畫面撒彩紙 ========== */
 const POKES = ["「喵！」", "「呼嚕嚕～」", "「再摸一下～」", "「嘿嘿～」", "「生日快樂喵！」", "「癢癢的～」"];
-const NIGHT_POKES = ["「噓～小聲點，我在看星星」", "「呼嚕……（翻個身）」", "「晚安喵～Zita 也要早點睡」", "「再摸一下就睡……」", "「路燈下面最溫暖了～」", "「Zita，今晚的月亮好圓喔」"];
+const NIGHT_POKES = ["「噓～細聲啲，我睇緊星星」", "「呼嚕……（翻個身）」", "「Good night喵～Zita」", "「再摸一下就睡……」", "「路燈下面最溫暖了～」", "「Zita，今晚的月亮好圓喔」"];
 stage.addEventListener("pointerdown", e => {
   if (cat.contains(e.target)) {
     const S = size(), cx = pos.x + S / 2, cy = pos.y + S - S * curK * 0.85;
