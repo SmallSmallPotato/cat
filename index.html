@@ -186,7 +186,7 @@ const SPECIALS = [
   { img: "poop", texts: ["「嗯……（埋沙子中）」", "「……請不要偷看。」"] },
   { img: "water", texts: ["「咕嚕咕嚕……喝水水！」", "「咕嚕咕嚕……」"] },
   { img: "fear", texts: ["「嗚哇……啱啱係咩聲咁大聲！」", "「怕怕……」"] },
-  { img: "play", texts: ["「抓到你了！喵哈哈～」", "「嘿！嘿！」"] }
+  { img: "play", texts: ["「捉到你！喵哈哈～」", "「嘿！嘿！」"] }
 ];
 
 /* ========== 基本元件 ========== */
@@ -1080,7 +1080,7 @@ const SCENES = {
     await pose(T, "stand", "「企直睇吓出邊有啲咩先。」");
     await pose(T, "wave", "「Hello!」");
     await pose(T, "stand", "「好似冇咩特別……」");
-    await pose(T, "waiting", "「坐回原位繼續發呆。」");
+    await pose(T, "waiting", "「返回原位繼續發呆。」");
   },
   sassy: async T => {
     await pose(T, "scorn", "「哼……你睇緊啲咩？」");
@@ -1090,7 +1090,7 @@ const SCENES = {
   },
   cake: async T => {
     candlesLit();
-    await goto(T, spotBeside(cakeProp, -1), "「咦？好香的味道～」");
+    await goto(T, spotBeside(cakeProp, -1), "「咦？好香嘅味道呀～」");
     faceToward(cakeProp);
     await pose(T, "curious", "「蛋糕！！」");
     await pose(T, "happy", "「蠟燭好靚靚～」");
@@ -1115,14 +1115,14 @@ const SCENES = {
   },
   nap: async T => {
     const lp = lampProps.length ? pick(lampProps) : null;
-    if (lp) { await goto(T, spotBeside(lp, Math.random() < 0.5 ? -1 : 1), pick(["「路燈下面最暖了～」", "「找個舒服的地方睡覺～」"])); faceToward(lp); }
+    if (lp) { await goto(T, spotBeside(lp, Math.random() < 0.5 ? -1 : 1), pick(["「路燈下面最暖了～」", "「搵個舒服嘅地方瞓覺～」"])); faceToward(lp); }
     await pose(T, "waiting", "「好睏喵……」", 2000);
     await pose(T, "lying", "「呼啊～（大大的喊露）」", 2200);
     const lines = ["「Zzz...（反肚大睡）」", "「Zzz... 呼嚕嚕...」", "「夢到小魚乾……自己游過來了……」", "「Zzz...Zita...生日快樂...Zzz」"];
     const total = rand(9000, 14000); let t = 0, i = 0;
     setImg("sleep");
     while (t < total) { say(lines[i % lines.length]); await wait(2600, T); t += 2600; i++; }
-    await pose(T, "stretch1", "「嗯……睡得好飽」", 1800);
+    await pose(T, "stretch1", "「嗯……瞓得好飽」", 1800);
   },
   sunbathe: async T => {
     await goto(T, randPos(), "「找個曬太陽的好位置～」");
@@ -1182,7 +1182,7 @@ function chooseScene(last) {
 
 /* 行出畫面 */
 async function leave(tok) {
-  say("「出去逛逛～」");
+  say("「借個尿遁先～」");
   const S = size(), p1 = toTL(pathCx(0.9) + rand(-0.1, 0.1), 0.9);
   const tx = pos.x < innerWidth / 2 ? -S - 60 : innerWidth + 60;
   await followPath(route(p1).concat([{ x: tx, y: p1.y }]), tok);
