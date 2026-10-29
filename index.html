@@ -1051,7 +1051,7 @@ function onShootingStar(gold) {
   const line = asleep ? pick(SLEEP_TALK) : gold ? GOLD_LINE : WISHES[wishIdx++ % WISHES.length];
   const kind = asleep ? "sleep" : gold ? "gold" : "wish";
   /* 停留時間：按字數計，確保讀得晒（金色最長） */
-  const ms = gold ? 9500 : asleep ? 5500 : Math.min(8500, Math.max(6000, 3200 + line.length * 150));
+  const ms = gold ? 5000 : asleep ? 4000 : Math.min(5500, Math.max(5000, 3000 + line.length * 150));
   const keepKey = curKey, still = !asleep && !moving;
   if (still) setImg("curious");
   showWish(line, kind, ms);
