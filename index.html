@@ -1607,7 +1607,7 @@ async function celebrate() {
 }
 fitCele(); addEventListener("resize", fitCele);
 
-/* ========== 開場 + 固定劇情（黃昏開始）+ 8-bit 程式生成音效 ========== */
+/* ========== 開場 + 固定劇情（黃昏開始）+ 程式生成音效與魔法音樂盒背景音樂 ========== */
 let cardOpened = false, storyMode = true, muted = false, AC = null, master = null, bgmG = null, bgmNext = 0, bgmBar = 0;
 const T0 = () => AC ? AC.currentTime : 0, MN = n => 440 * Math.pow(2, (n - 69) / 12);
 function audioInit() {
@@ -1634,19 +1634,61 @@ const sfx = {
   tick() { tone(MN(88), T0(), .07, "square", .05); },
   chord() { const t = T0(); [72, 76, 79, 84].forEach(n => tone(MN(n), t, 1.4, "triangle", .09)); }
 };
-/* 童話音樂盒（G 大調 6/8，輕快柔和）：8 小節循環 */
-const BGM_CH = [[55,59,62],[52,55,59],[48,52,55],[50,54,57],[55,59,62],[52,55,59],[45,52,57],[50,54,57]];
-const BGM_ML = [
-  [[71,0,1],[74,1,1],[79,2,2],[74,4,1],[71,5,1]], [[76,0,2],[74,2,1],[71,3,1],[67,4,2]],
-  [[72,0,1],[76,1,1],[79,2,2],[76,4,1],[72,5,1]], [[74,0,3],[69,3,1],[74,4,2]],
-  [[71,0,1],[74,1,1],[79,2,1],[78,3,1],[79,4,2]], [[76,0,1],[79,1,1],[76,2,1],[74,3,1],[71,4,2]],
-  [[72,0,2],[69,2,1],[72,3,1],[76,4,1],[74,5,1]], [[74,0,2],[78,2,1],[74,3,1],[69,4,2]]];
+/* 魔法音樂盒（E 小調帶童話式華麗，3/4 圓舞曲，10 小節循環）
+   音樂盒主旋律 + 豎琴式琶音 + 低音 + 柔和弦樂墊底 + 閃爍回音；第 10 小節以魔法棒式音階瀑布收尾，再回到開頭 */
+let bgmBus = null;
+const BGM_BARS = 10, BGM_E = .23;                       // 每小節 6 個八分音符，一個循環約 13.8 秒
+const BGM_BASS = [52, 48, 45, 47, 52, 43, 48, 45, 42, 47];
+const BGM_ARP = [                                        // Em | Cmaj7 | Am7 | B7 | Em | G | C | Am | F#m7b5 | B7
+  [59,64,67,71], [60,64,67,71], [57,64,67,72], [59,63,66,69], [59,64,67,71],
+  [55,62,67,71], [60,64,67,72], [57,64,69,72], [54,60,64,69], [59,63,66,69]];
+const BGM_ML = [                                         // [音高, 起拍(八分音符), 長度]
+  [[76,0,1],[79,1,1],[83,2,2],[81,4,1],[79,5,1]],
+  [[76,0,1],[79,1,1],[84,2,2],[83,4,1],[79,5,1]],
+  [[81,0,2],[79,2,1],[76,3,1],[79,4,2]],
+  [[78,0,1],[81,1,1],[87,2,3],[83,5,1]],
+  [[83,0,1],[88,1,1],[86,2,1],[83,3,1],[79,4,2]],
+  [[79,0,1],[83,1,1],[86,2,2],[83,4,1],[79,5,1]],
+  [[84,0,2],[83,2,1],[81,3,1],[79,4,2]],
+  [[81,0,1],[84,1,1],[88,2,2],[86,4,1],[84,5,1]],
+  [[90,0,2],[88,2,1],[84,3,1],[81,4,2]],
+  [[83,0,1],[87,1,1],[90,2,1]]];
+/* 音樂盒音色：基音 + 高八度泛音 + 短促金屬「叮」聲 */
+function boxNote(n, t, d, v) {
+  const f = MN(n);
+  tone(f, t, d, "sine", v, 0, bgmBus);
+  tone(f * 2, t, d * .45, "sine", v * .3, 0, bgmBus);
+  if (f < 1600) tone(f * 2.76, t, d * .15, "sine", v * .12, 0, bgmBus);
+}
+/* 柔和弦樂墊底（鋸齒波 + 低通濾波，慢起慢收） */
+function bgmPad(notes, t, d, v) {
+  notes.forEach(n => {
+    const o = AC.createOscillator(), g = AC.createGain(), fl = AC.createBiquadFilter();
+    o.type = "sawtooth"; o.frequency.value = MN(n); o.detune.value = (Math.random() - .5) * 10;
+    fl.type = "lowpass"; fl.frequency.value = 800;
+    g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(v, t + d * .35); g.gain.linearRampToValueAtTime(.0001, t + d);
+    o.connect(fl); fl.connect(g); g.connect(bgmG); o.start(t); o.stop(t + d + .05);
+  });
+}
+function bgmPlayBar(b, t) {
+  const E = BGM_E, ar = BGM_ARP[b], bs = BGM_BASS[b];
+  tone(MN(bs), t, E * 3.2, "triangle", .075, 0, bgmG);            // 低音（第 1 拍）
+  tone(MN(bs + 12), t, E * 2, "sine", .03, 0, bgmG);
+  bgmPad(ar.slice(1), t, E * 6.6, .011);                            // 弦樂墊底
+  [0, 1, 2, 3, 2, 1].forEach((k, i) => boxNote(ar[k], t + i * E, E * 2.6, .035)); // 豎琴式琶音
+  BGM_ML[b].forEach(m => boxNote(m[0], t + m[1] * E, Math.min(1.5, m[2] * E * 1.7 + .35), .1)); // 音樂盒主旋律
+  if (b === BGM_BARS - 1)                                           // 魔法棒式音階瀑布，帶回循環開頭
+    [95, 93, 90, 87, 83, 81, 78, 75].forEach((n, i) => boxNote(n, t + (3 + i * .36) * E, E * 1.6, .05));
+}
 function bgmStart() {
-  if (!AC) return; bgmG = AC.createGain(); bgmG.connect(master); bgmNext = AC.currentTime + .1; const E = .21;
-  setInterval(() => { while (bgmNext < AC.currentTime + 1.5) { const b = bgmBar++ % 8, c = BGM_CH[b], t = bgmNext;
-    [c[0] - 12, c[1], c[2], c[0] - 12, c[1], c[2]].forEach((n, i) => tone(MN(n + (i % 3 ? 0 : 12)), t + i * E, E * 1.6, "triangle", i % 3 ? .045 : .06, 0, bgmG));
-    BGM_ML[b].forEach(m => { tone(MN(m[0]), t + m[1] * E, m[2] * E * 1.9, "sine", .085, 0, bgmG); tone(MN(m[0] + 12), t + m[1] * E, m[2] * E * 1.1, "triangle", .018, 0, bgmG); });
-    bgmNext += 6 * E; } }, 400);
+  if (!AC) return; const E = BGM_E;
+  bgmG = AC.createGain(); bgmG.connect(master);
+  bgmBus = AC.createGain(); bgmBus.connect(bgmG);
+  const dl = AC.createDelay(1), fb = AC.createGain(), wet = AC.createGain(), lp = AC.createBiquadFilter();
+  dl.delayTime.value = E * 1.5; fb.gain.value = .3; wet.gain.value = .3; lp.type = "lowpass"; lp.frequency.value = 3500;
+  bgmBus.connect(dl); dl.connect(lp); lp.connect(fb); fb.connect(dl); lp.connect(wet); wet.connect(bgmG);   // 閃爍回音
+  bgmNext = AC.currentTime + .1;
+  setInterval(() => { while (bgmNext < AC.currentTime + 1.5) { bgmPlayBar(bgmBar++ % BGM_BARS, bgmNext); bgmNext += 6 * E; } }, 400);
 }
 function bgmTo(v) { if (bgmG) bgmG.gain.setTargetAtTime(v, AC.currentTime, .12); }
 const SONG = [[67,.75],[67,.25],[69,1],[67,1],[72,1],[71,2],[67,.75],[67,.25],[69,1],[67,1],[74,1],[72,2],[67,.75],[67,.25],[79,1],[76,1],[72,1],[71,1],[69,2],[77,.75],[77,.25],[76,1],[72,1],[74,1],[72,2]];
