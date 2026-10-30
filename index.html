@@ -878,7 +878,7 @@ const START_HOUR = (function () { const m = /[?&]t=(\d+(?:\.\d+)?)/.exec(locatio
 const PHASES = [["dawn", 4.5, "破曉", "🌄"], ["morning", 6.5, "清晨", "🌤️"], ["noon", 10, "中午", "☀️"], ["afternoon", 14, "下午", "🌞"], ["dusk", 17.5, "黃昏", "🌇"], ["night", 19.5, "夜晚", "🌙"]];
 function phaseIdx(h) { let k = PHASES.length - 1; if (h >= PHASES[0][1]) for (let i = 0; i < PHASES.length; i++) if (h >= PHASES[i][1]) k = i; return k; }
 let clock = START_HOUR, skip = 0, NIGHT = 0, DAYA = 1, starA = 0, curPhase = phaseIdx(START_HOUR), phaseQueue = [];
-let catAway = false, moving = false, accT = 1, lastClockStr = "";
+let catAway = false, moving = false, accT = 1, lastClockStr = "", cakeDone = false;
 
 const skyCv = document.getElementById("sky"), skyCtx = skyCv.getContext("2d");
 const starsCv = document.getElementById("stars"), sctx = starsCv.getContext("2d");
@@ -1207,6 +1207,8 @@ const SCENES = {
     await pose(T, "scorn", "「哼……」");
   },
   cake: async T => {
+    if (cakeDone) return;            // 吹蠟燭只會有一次
+    cakeDone = true;
     candlesLit();
     await goto(T, spotBeside(cakeProp, -1), "「咦？好香嘅味道呀～」");
     faceToward(cakeProp);
@@ -1218,7 +1220,6 @@ const SCENES = {
     await waitBlow(T, 16000);
     await pose(T, "happy", "「願望一定會實現！」");
     await pose(T, "rich", "「蛋糕要分我一口喔～」");
-    candlesLit();
   },
   gift: async T => {
     await goto(T, spotBeside(giftProp, 1), "「咦？有禮物！」");
@@ -1269,7 +1270,6 @@ const SCENES = {
   },
   ph_afternoon: async T => {
     await pose(T, "happy", "「下午茶時間到～」");
-    await SCENES.cake(T);
   },
   ph_dusk: async T => {
     await pose(T, "curious", "「嘩……天空變成紫色的！」");
@@ -1280,7 +1280,7 @@ const SCENES = {
     await pose(T, "wave", "「已經夜晚喇～路燈都著咗！」", 3000);
     await pose(T, "curious", "「星星出來了喵～」");
     await pose(T, "waiting", "「好眼瞓……」");
-    await SCENES.cake(T);
+    if (!cakeDone) await SCENES.cake(T);   // 只喺未吹過蠟燭嘅夜晚先會出現
   }
 };
 
@@ -1291,6 +1291,7 @@ function chooseScene(last) {
   if (n > 0.25) w.nap = n > 0.5 ? 5 : 1.2;
   if (n > 0.5) { w.stargaze = 2.4; w.cake = 2; w.wander = .5; w.sassy = .3; w.lucky = .4; w.lookout = .6; }
   if (h >= 10 && h < 16) w.sunbathe = 1.6;
+  if (cakeDone || !(h >= 20 || h < 1.5)) w.cake = 0;   // 蛋糕只喺夜晚、而且只得一次
   const names = Object.keys(w).filter(k => w[k] > 0 && !last.includes(k));
   let tot = 0; names.forEach(k => tot += w[k]);
   let r = Math.random() * tot;
@@ -1355,7 +1356,7 @@ function restart(startWithSpecial) {
   gen++;
   sprite.style.transform = ""; shadow.style.transform = "";
   cat.style.transition = "opacity .6s"; cat.style.opacity = "1";
-  candlesLit(); moving = false; catAway = false;
+  if (!cakeDone) candlesLit(); moving = false; catAway = false;
   life(gen, startWithSpecial);
 }
 
