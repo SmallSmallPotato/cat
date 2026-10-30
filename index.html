@@ -171,6 +171,12 @@
   .glow.pool { background: radial-gradient(ellipse at center, rgba(255,196,110,.55) 0, rgba(255,180,90,.24) 45%, rgba(255,170,80,0) 72%); }
   .glow.cake { background: radial-gradient(circle, rgba(255,226,150,.85) 0, rgba(255,190,100,.35) 30%, rgba(255,170,80,0) 68%);
     opacity: calc(var(--lamp, 0) * var(--on, 1)); transition: opacity .6s; }
+  .glow.win { background: radial-gradient(circle, rgba(255,240,190,.95) 0, rgba(255,205,115,.45) 30%, rgba(255,170,80,.14) 52%, rgba(255,160,70,0) 70%);
+    animation: lampb 4.2s ease-in-out infinite; animation-delay: var(--d, 0s); }
+  .csmoke { position: absolute; z-index: 6; pointer-events: none; opacity: 0; background: #eef0f8; border-radius: 28%;
+    animation: csm 6s ease-out infinite; animation-delay: var(--d, 0s); }
+  @keyframes csm { 0% { transform: translate(0,0) scale(.5); opacity: 0; } 14% { opacity: .85; }
+    100% { transform: translate(var(--dx, 10px), var(--rise, -90px)) scale(1.7); opacity: 0; } }
   #clock { position: fixed; right: calc(8px + env(safe-area-inset-right)); top: calc(8px + env(safe-area-inset-top)); z-index: 6000;
     font-family: "zpix", "PingFang HK", "Noto Sans TC", "Microsoft JhengHei", monospace; font-size: 13px; font-weight: bold; color: #5c4033;
     background: rgba(255,253,245,.92); border: 2px solid #5c4033; box-shadow: 2px 2px 0 #c89666; padding: 3px 10px; white-space: nowrap;
@@ -324,10 +330,12 @@ const toTL = (xFrac, f) => ({ x: xFrac * innerWidth - size() / 2, y: f * innerHe
 const curF = () => (pos.y + size()) / innerHeight;
 
 const CAKE = { xf: 0.78, f: 0.68, mult: 0.8 };
-const GIFT = { xf: 0.2, f: 0.72, mult: 1.05 };
+const HOUSE = { xf: 0.19, f: 0.68, mult: 0.92 };      // 貓咪嘅北歐貓屋
+const GIFT = { xf: 0.33, f: 0.76, mult: 1.05 };       // 禮物放喺貓屋門前不遠
 const inZone = (xf, f) =>
   (Math.abs(xf - CAKE.xf) < 0.17 && Math.abs(f - CAKE.f) < 0.09) ||
-  (Math.abs(xf - GIFT.xf) < 0.14 && Math.abs(f - GIFT.f) < 0.08);
+  (Math.abs(xf - GIFT.xf) < 0.14 && Math.abs(f - GIFT.f) < 0.08) ||
+  (Math.abs(xf - HOUSE.xf) < 0.17 && Math.abs(f - HOUSE.f) < 0.1);
 
 function randPos() {
   const f = rand(0.5, 0.94);
@@ -553,8 +561,214 @@ function makeCake() {
   }, "#8a4a6a");
 }
 
+/* ========== 北歐小屋（Falu 紅牆 + 白邊 + 深灰藍屋頂）==========
+   小屋同貓屋共用同一套配色同畫法，所以睇落係「一家人」。
+   座標用「連續座標」：cx 係中線，單格 x 佔 [x, x+1)。 */
+const NORD = {
+  wallA: "#c4503f", wallB: "#ad4033", wallC: "#d4634f", wallD: "#913428",
+  trim: "#f8f2e4", trimS: "#dcd1b8",
+  roofA: "#4d5470", roofL: "#69719a", roofD: "#363b52",
+  stoneA: "#a39e94", stoneS: "#7f7a71", stoneL: "#bdb8ac",
+  woodA: "#b98a52", woodS: "#8a6238", woodL: "#d9ab6c",
+  doorA: "#4f8f86", doorD: "#3b756d", doorL: "#72ada2",
+  glassL: "#fff3c4", glassA: "#ffe08a", glassD: "#ffc75e",
+  iron: "#3a3a46", bulbs: ["#ffe27a", "#ff9ab8", "#8fd8ff", "#a6f0a0"]
+};
+/* 前山牆 + 屋簷：by 山牆最底一行 y，hw 牆身半寬，over 屋簷伸出，rise 每行收窄幾多，rows 行數 */
+function nordGable(R, P, cx, by, hw, over, rise, rows) {
+  const N = NORD;
+  for (let r = 0; r < rows; r++) {
+    const y = by - r, hO = Math.round(hw + over - rise * r), hI = Math.round(hw - rise * r);
+    if (hO < 1) break;
+    R(cx - hO, y, hO * 2, 1, N.roofA);
+    if (hI >= 2) {
+      for (let x = cx - hI + 1; x < cx + hI - 1; x++) {                       // 山牆牆板
+        const k = x - (cx - hw);
+        P(x, y, k % 3 === 2 ? N.wallB : (k % 6 === 0 ? N.wallC : N.wallA));
+      }
+      P(cx - hI, y, N.trim); P(cx + hI - 1, y, N.trim);                        // 白色封簷板
+    }
+    P(cx - hO, y, N.roofD); P(cx + hO - 1, y, N.roofD);                        // 屋頂外沿較暗
+    for (let j = 1; j < over; j++) if ((r + j * 2) % 5 === 0) { P(cx - hO + j, y, N.roofL); P(cx + hO - 1 - j, y, N.roofL); }   // 瓦片反光（斜紋）
+    if (r % 3 === 1 && hI >= 2) {                                              // 彩燈串（細細粒暖光燈泡）
+      const b = N.bulbs[(r >> 1) % N.bulbs.length]; P(cx - hO + 2, y, b); P(cx + hO - 3, y, b);
+    }
+  }
+  const top = by - Math.min(rows, Math.ceil((hw + over) / rise)) + 1;
+  P(cx - 1, top, N.roofL); P(cx, top, N.roofL);
+}
+/* 牆身：直板牆 + 白橫樑 + 轉角白板 + 石基。rows 係牆身行數 */
+function nordWall(R, P, cx, gy, hw, rows) {
+  const N = NORD, top = gy - 2 - rows;
+  R(cx - hw, top, hw * 2, rows, N.wallA);
+  for (let i = 0; i < hw * 2; i++) {
+    const x = cx - hw + i;
+    if (i % 3 === 2) R(x, top, 1, rows, N.wallB); else if (i % 6 === 0) R(x, top + 1, 1, rows - 1, N.wallC);
+  }
+  R(cx - hw, top, hw * 2, 1, N.wallD);                                          // 屋簷喺牆上嘅影
+  R(cx - hw, top - 1, hw * 2, 1, N.trim);                                       // 橫樑
+  R(cx - hw, top - 1, 2, rows + 1, N.trim); R(cx + hw - 2, top - 1, 2, rows + 1, N.trim);   // 轉角板
+  R(cx - hw + 2, top, 1, rows, N.trimS); R(cx + hw - 3, top, 1, rows, N.trimS);
+  R(cx - hw, gy - 2, hw * 2, 2, N.stoneA); R(cx - hw, gy - 2, hw * 2, 1, N.stoneL);   // 石基
+  for (let i = 0; i < hw * 2; i++) { const x = cx - hw + i; if (i % 5 === 1) P(x, gy - 2, N.stoneS); if (i % 5 === 3) P(x, gy - 1, N.stoneS); }
+}
+/* 十字窗（暖黃室內燈光 + 細窗簾）：x,y 係外框左上角，外框 = 玻璃 + 2 */
+function nordWindow(R, P, x, y, gw, gh) {
+  const N = NORD;
+  R(x, y, gw + 2, gh + 2, N.trim);
+  for (let j = 0; j < gh; j++) R(x + 1, y + 1 + j, gw, 1, j < gh * 0.2 ? N.glassL : j < gh * 0.6 ? N.glassA : N.glassD);
+  R(x + 1 + (gw >> 1), y + 1, 1, gh, N.trim); R(x + 1, y + 1 + (gh >> 1), gw, 1, N.trim);
+  if (gw >= 5) { P(x + 1, y + 1, "#fff0dc"); P(x + 1, y + 2, "#fff0dc"); P(x + gw, y + 1, "#ffd9e6"); P(x + gw, y + 2, "#ffd9e6"); }
+}
+/* 窗台花箱：x,y 係木箱左上角（2 行高），花開喺箱面上 */
+function nordFlowerBox(R, P, x, y, w, cols) {
+  const N = NORD;
+  R(x, y, w, 2, N.woodA); R(x, y + 1, w, 1, N.woodS); P(x, y, N.woodL);
+  for (let i = 1; i < w - 1; i++) {
+    if (i % 2) { P(x + i, y - 1, i % 4 === 1 ? "#3f9a3f" : "#2f7d3f"); P(x + i, y - 2, cols[(i >> 1) % cols.length]); }
+    else P(x + i, y - 1, cols[((i >> 1) + 1) % cols.length]);
+  }
+}
+function nordLantern(R, P, x, y) {                                               // 3 寬燈籠，x,y 係頂蓋左上角
+  const N = NORD;
+  P(x + 1, y - 1, N.iron); R(x, y, 3, 1, N.iron); R(x, y + 1, 3, 3, "#ffd36e"); P(x + 1, y + 2, "#fff8d8"); R(x, y + 4, 3, 1, N.iron);
+}
+
+/* ---- 小徑盡頭嘅北歐小屋 ---- */
+const COT = { CX: 28, GY: 42 };
+const COTTAGE_GLOWS = [
+  { x: COT.CX - 12.5, y: COT.GY - 11.5, w: 22 }, { x: COT.CX + 12.5, y: COT.GY - 11.5, w: 22 },   // 兩邊窗
+  { x: COT.CX, y: COT.GY - 10.5, w: 15 },                                                           // 門窗
+  { x: COT.CX - 6.5, y: COT.GY - 9.5, w: 13 }, { x: COT.CX + 6.5, y: COT.GY - 9.5, w: 13 },         // 兩盞門燈
+  { x: COT.CX, y: COT.GY - 27, w: 15 },                                                             // 閣樓圓窗
+  { x: COT.CX, y: COT.GY + 3, w: 28, h: 8, pool: true }                                             // 門前光影
+];
+function makeCottage() {
+  const CX = COT.CX, GY = COT.GY, N = NORD;
+  return mkSprite(56, 45, ({ R, P, E }) => {
+    // 煙囪（喺屋頂後面，只露出屋頂上面嘅部分）
+    R(CX + 8, GY - 38, 6, 16, "#efe7d4"); R(CX + 12, GY - 38, 2, 16, "#cdc1a4");
+    for (let y = GY - 37; y < GY - 22; y += 2) { R(CX + 8, y, 6, 1, "#ddd2b8"); P(CX + 9 + ((y >> 1) % 2) * 2, y - 1, "#ddd2b8"); }
+    R(CX + 8, GY - 38, 6, 1, "#b9ad92"); R(CX + 7, GY - 40, 8, 2, "#5b5b6b"); R(CX + 7, GY - 40, 8, 1, "#7d7d90");
+    // 山牆 + 屋頂
+    nordGable(R, P, CX, GY - 21, 19, 4, 1.35, 17);
+    // 閣樓圓窗
+    E(CX, GY - 27, 4, 4, N.trim); E(CX, GY - 27, 3, 3, N.glassD); E(CX, GY - 27.6, 3, 2.4, N.glassA); E(CX - .4, GY - 28.4, 2.2, 1.4, N.glassL);
+    R(CX - 3, GY - 27, 6, 1, N.trim); P(CX - 1, GY - 24, N.trim); P(CX, GY - 24, N.trim); R(CX - 2, GY - 23, 4, 1, N.trimS);
+    // 牆身
+    nordWall(R, P, CX, GY, 19, 17);
+    // 兩邊窗 + 花箱
+    nordWindow(R, P, CX - 16, GY - 16, 5, 7); nordWindow(R, P, CX + 9, GY - 16, 5, 7);
+    nordFlowerBox(R, P, CX - 16, GY - 8, 7, ["#ff7fa6", "#ffffff", "#ff7fa6", "#ffd23f"]);
+    nordFlowerBox(R, P, CX + 9, GY - 8, 7, ["#ffd23f", "#b784ff", "#ffffff", "#ff9a3c"]);
+    R(CX - 16, GY - 6, 7, 1, N.wallD); R(CX + 9, GY - 6, 7, 1, N.wallD);
+    // 門 + 門框
+    R(CX - 6, GY - 16, 12, 1, N.trim); R(CX - 5, GY - 15, 10, 15, N.trim); R(CX - 5, GY - 15, 10, 1, N.trimS);
+    R(CX - 4, GY - 14, 8, 14, N.doorA); R(CX + 3, GY - 14, 1, 14, N.doorD); R(CX - 4, GY - 14, 1, 14, N.doorL);
+    R(CX - 3, GY - 13, 6, 5, N.trim); R(CX - 2, GY - 12, 4, 1, N.glassL); R(CX - 2, GY - 11, 4, 1, N.glassA); R(CX - 2, GY - 10, 4, 1, N.glassD);
+    R(CX - 3, GY - 7, 6, 5, N.doorD); R(CX - 2, GY - 6, 4, 3, N.doorA); R(CX - 2, GY - 6, 4, 1, N.doorL);
+    P(CX + 2, GY - 8, "#ffd24a");
+    // 兩盞門燈
+    nordLantern(R, P, CX - 8, GY - 12); nordLantern(R, P, CX + 5, GY - 12);
+    // 木階 + 地氈
+    R(CX - 7, GY, 14, 1, N.woodL); R(CX - 7, GY + 1, 14, 1, N.woodS); P(CX - 3, GY, N.woodS); P(CX + 1, GY, N.woodS);
+    R(CX - 3, GY + 2, 6, 1, "#c9485f"); P(CX - 2, GY + 2, "#fff0dc"); P(CX, GY + 2, "#fff0dc"); P(CX + 2, GY + 2, "#fff0dc");
+    // 左邊：花盆（鬱金香）+ 繡球灌木
+    R(CX - 12, GY - 2, 3, 2, "#c9785a"); R(CX - 12, GY - 2, 3, 1, "#e09a7a");
+    P(CX - 11, GY - 3, "#3f9a3f"); R(CX - 12, GY - 5, 3, 2, "#ff7fa6"); P(CX - 11, GY - 5, "#ffc2d6");
+    E(4, GY - 3, 4, 3.5, "#2f7d3f"); E(4, GY - 4, 3.2, 2.8, "#45a04b"); E(3, GY - 5, 2, 1.5, "#69bf5a");
+    P(2, GY - 4, "#ff7fa6"); P(5, GY - 3, "#ffffff"); P(4, GY - 6, "#ff7fa6"); P(1, GY - 2, "#ffffff"); P(6, GY - 5, "#ffffff");
+    // 右邊：疊好嘅柴
+    const logs = [[47, GY - 2, 4], [48, GY - 4, 3], [49, GY - 6, 2]];
+    logs.forEach((row, ri) => { for (let i = 0; i < row[2]; i++) { const x = row[0] + i * 2; R(x, row[1], 2, 2, (i + ri) % 2 ? "#9a6c3c" : "#b98a52"); P(x, row[1], "#e8c58f"); } });
+  }, "#4a2a30");
+}
+
+/* ---- 貓咪嘅北歐貓屋 ---- */
+const CAT = { CX: 24, GY: 50 };
+const CATHOUSE_GLOWS = [
+  { x: CAT.CX, y: CAT.GY - 8, w: 20 },                         // 圓拱門入面嘅暖光
+  { x: CAT.CX + 11.5, y: CAT.GY - 11.5, w: 12 },               // 小窗
+  { x: CAT.CX, y: CAT.GY + 3, w: 24, h: 6, pool: true }        // 門前光影
+];
+function makeCatHouse() {
+  const CX = CAT.CX, GY = CAT.GY, N = NORD;
+  return mkSprite(48, 54, ({ R, P, E }) => {
+    // 風向標：橫樑 + 一隻坐住嘅黑貓剪影（面向左，尾巴翹起）
+    R(CX, GY - 39, 1, 5, N.iron); R(CX - 3, GY - 37, 7, 1, N.iron); P(CX - 3, GY - 38, N.iron); P(CX + 3, GY - 38, N.iron);
+    ["X.X....", "XXX....", ".XX....", ".XXX..X", ".XXXXXX", ".XXXXX."].forEach((row, ry) => {
+      for (let rx = 0; rx < row.length; rx++) if (row[rx] === "X") P(CX - 2 + rx, GY - 45 + ry, N.iron);
+    });
+    P(CX - 2, GY - 44, "#ffd24a");                                                  // 一隻金色眼
+    // 山牆 + 屋頂
+    nordGable(R, P, CX, GY - 20, 18, 4, 1.5, 15);
+    // 山牆心形通風口
+    [[-3, 0], [-2, 0], [1, 0], [2, 0], [-3, 1], [-2, 1], [-1, 1], [0, 1], [1, 1], [2, 1], [-2, 2], [-1, 2], [0, 2], [1, 2], [-1, 3], [0, 3]]
+      .forEach(p => P(CX + p[0], GY - 28 + p[1], "#ff7fa6")); P(CX - 3, GY - 28, "#ffc2d6"); P(CX - 2, GY - 27, "#ffc2d6");
+    // 牆身
+    nordWall(R, P, CX, GY, 18, 16);
+    // 圓拱貓門：白框 + 暖光室內（木板牆、軟墊、吊燈）
+    const dcy = GY - 9;
+    const inArch = (x, y, rad) => { const dx = x + .5 - CX, dy = y + .5 - dcy; return y + .5 >= dcy ? Math.abs(dx) <= rad : dx * dx + dy * dy <= rad * rad; };
+    for (let y = GY - 17; y < GY; y++) for (let x = CX - 8; x <= CX + 7; x++) if (inArch(x, y, 7)) P(x, y, N.trim);
+    for (let y = GY - 16; y < GY; y++) for (let x = CX - 8; x <= CX + 7; x++) if (inArch(x, y, 6)) {
+      const base = y < GY - 11 ? "#4d2c3a" : y < GY - 7 ? "#6b3a3c" : y < GY - 3 ? "#8c4d42" : "#c98f5a";
+      const lit = Math.hypot((x + .5 - CX) * 0.8, y + .5 - (GY - 6)) < 4;
+      P(x, y, lit && y < GY - 3 ? "#a3604a" : ((x - CX) % 4 === 0 && y < GY - 3) ? "#5b3338" : base);
+    }
+    P(CX - 1, GY - 14, N.iron); R(CX - 1, GY - 13, 2, 2, "#fff6cf"); P(CX - 1, GY - 11, "#ffd36e");   // 吊燈
+    E(CX, GY - 3, 5, 2.2, "#fff0dc"); E(CX, GY - 2.4, 4.5, 1.2, "#ffd0e0"); P(CX - 2, GY - 4, "#ffffff"); P(CX + 1, GY - 4, "#ffffff");   // 軟墊
+    P(CX - 1, GY - 3, "#ff7fa6"); P(CX, GY - 3, "#ff7fa6");
+    // 左：掛牌（貓爪印）
+    const px = CX - 14, py = GY - 14;
+    R(px, py, 5, 6, N.woodA); R(px, py, 5, 1, N.woodL); R(px, py + 5, 5, 1, N.woodS); R(px + 4, py, 1, 6, N.woodS);
+    P(px + 1, py - 1, N.iron); P(px + 3, py - 1, N.iron); P(px + 1, py - 2, N.iron); P(px + 3, py - 2, N.iron);
+    P(px + 1, py + 1, "#5a3a2a"); P(px + 3, py + 1, "#5a3a2a"); P(px + 2, py + 2, "#5a3a2a"); R(px + 1, py + 3, 3, 1, "#5a3a2a"); P(px + 2, py + 4, "#5a3a2a");
+    // 右：細窗 + 花箱
+    nordWindow(R, P, CX + 9, GY - 15, 3, 5);
+    nordFlowerBox(R, P, CX + 9, GY - 8, 5, ["#ffd23f", "#ff7fa6", "#ffffff"]);
+    // 木階 + 爪印地氈
+    R(CX - 9, GY, 18, 1, N.woodL); R(CX - 9, GY + 1, 18, 1, N.woodS); P(CX - 4, GY, N.woodS); P(CX + 3, GY, N.woodS);
+    R(CX - 4, GY + 2, 8, 1, "#c9485f"); P(CX - 3, GY + 2, "#fff0dc"); P(CX - 1, GY + 2, "#fff0dc"); P(CX + 1, GY + 2, "#fff0dc"); P(CX + 3, GY + 2, "#fff0dc");
+    // 左：鬱金香花盆；右：貓糧碗
+    R(CX - 14, GY - 2, 3, 2, "#c9785a"); R(CX - 14, GY - 2, 3, 1, "#e09a7a"); P(CX - 13, GY - 3, "#3f9a3f"); R(CX - 14, GY - 5, 3, 2, "#ff7fa6"); P(CX - 13, GY - 5, "#ffc2d6");
+    R(CX + 10, GY, 5, 1, "#ffd0e0"); R(CX + 11, GY + 1, 3, 1, "#ff7fa6"); R(CX + 11, GY - 1, 3, 1, "#c98f5a"); P(CX + 12, GY - 2, "#c98f5a");
+  }, "#4a2a30");
+}
+
+/* 窗光 / 門燈光：夜晚（--lamp）先亮。defs 用精靈座標（連續座標）。 */
+function mkSpriteGlows(defs) {
+  return defs.map(g => {
+    const el = document.createElement("div"); el.className = "glow " + (g.pool ? "pool" : "win");
+    if (!g.pool) el.style.setProperty("--d", (-Math.random() * 3).toFixed(2) + "s");
+    stage.appendChild(el); return { el: el, g: g };
+  });
+}
+/* ox,oy = 精靈座標 (0,0) 喺螢幕上嘅位置；ux,uy = 一個精靈像素喺螢幕上有幾大 */
+function placeSpriteGlows(list, ox, oy, ux, uy) {
+  list.forEach(o => {
+    const g = o.g, w = g.w * ux, h = (g.h || g.w) * uy, st = o.el.style;
+    st.width = w + "px"; st.height = h + "px"; st.left = (ox + g.x * ux - w / 2) + "px"; st.top = (oy + g.y * uy - h / 2) + "px";
+  });
+}
+/* 小屋窗光 + 煙囪輕煙（背景重畫時一齊重新定位） */
+let cottageGlows = null, chimneySmoke = null;
+function placeCottageLights(gx, yb, lw, lh) {
+  const ux = innerWidth / lw, uy = innerHeight / lh;
+  if (!cottageGlows) cottageGlows = mkSpriteGlows(COTTAGE_GLOWS);
+  placeSpriteGlows(cottageGlows, (gx - COT.CX) * ux, (yb - COT.GY) * uy, ux, uy);
+  if (!chimneySmoke) chimneySmoke = [0, -2, -4].map(d => {
+    const el = document.createElement("div"); el.className = "csmoke"; el.style.setProperty("--d", d + "s"); stage.appendChild(el); return el;
+  });
+  chimneySmoke.forEach(el => {
+    el.style.width = (3 * ux) + "px"; el.style.height = (3 * uy) + "px";
+    el.style.left = ((gx + 11 - 1.5) * ux) + "px"; el.style.top = ((yb - 43) * uy) + "px";
+    el.style.setProperty("--rise", (-22 * uy) + "px"); el.style.setProperty("--dx", (5 * ux) + "px");
+  });
+}
+
 const props = [];
-let cakeProp = null, giftProp = null, cakeGlow = null;
+let cakeProp = null, giftProp = null, houseProp = null, cakeGlow = null;
 const lampProps = [];
 function addProp(cv, xf, f, mult) {
   const el = document.createElement("div"); el.className = "prop"; el.appendChild(cv); stage.appendChild(el);
@@ -570,14 +784,15 @@ function layoutProps() {
     st.zIndex = Math.round(p.f * H);
     if (p.lamp) placeGlow(p, u);
     if (p === cakeProp) placeCakeGlow(p, u);
+    if (p.sg) placeSpriteGlows(p.sg, p.xf * W - w / 2 + u, p.f * H - h + 2 * u, u, u);
   });
 }
 function buildProps() {
   let seed = 4242; const r = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
   const bushes = [["#ff6f91", "#ffd23f"], ["#ffffff", "#ffd23f"], ["#b784ff", "#ff9a3c", "#ff6f91"]].map((fs, i) => makeBush(fs, 777 + i * 31));
   const lampCv = makeLamp();
-  [0.5, 0.57, 0.64, 0.71, 0.78].forEach((f, i) => {
-    const xf = pathCx(f) + (i % 2 ? 1 : -1) * (pathHw(f) + 0.03);
+  [0.57, 0.64, 0.71, 0.78].forEach((f, i) => {
+    const xf = pathCx(f) + (i % 2 ? -1 : 1) * (pathHw(f) + 0.03);
     if (!inZone(xf, f)) { const lp = addProp(copyCv(lampCv), xf, f, 0.9); lp.lamp = true; mkGlows(lp); lampProps.push(lp); }
   });
   const placed = []; let tries = 0;
@@ -590,6 +805,8 @@ function buildProps() {
     placed.push([xf, f]);
   }
   placed.forEach((q, i) => addProp(copyCv(bushes[i % 3]), q[0], q[1], 0.85));
+  houseProp = addProp(makeCatHouse(), HOUSE.xf, HOUSE.f, HOUSE.mult);
+  houseProp.sg = mkSpriteGlows(CATHOUSE_GLOWS);
   giftProp = addProp(makeGift(), GIFT.xf, GIFT.f, GIFT.mult);
   cakeProp = addProp(makeCake(), CAKE.xf, CAKE.f, CAKE.mult);
   [10, 14, 18].forEach((x, i) => {
@@ -673,9 +890,11 @@ function drawGarden() {
     if ((x * 7) % 5 < 2) P(x, top + 2 + (x % 3), "#4ea04f");
     P(x, top, "#5bb257");
   }
-  // 白色木圍欄
-  for (let x = 0; x < lw; x += 4) { R(x, H0 + 1, 3, 7, "#f6ecd2"); R(x + 2, H0 + 1, 1, 7, "#d6c298"); R(x, H0, 3, 1, "#f6ecd2"); }
-  R(0, H0 + 3, lw, 1, "#d6c298"); R(0, H0 + 6, lw, 1, "#d6c298"); R(0, H0 + 8, lw, 1, "#4b8f3a");
+  // 樹籬下半截（圍欄拆咗之後，樹籬一直落到草地）：加深落去嘅葉影 + 零星小花
+  for (let x = 0; x < lw; x++) { R(x, H0 + 3, 1, 6, (x * 5) % 7 < 3 ? "#2f7d3f" : "#2a7338"); if ((x * 3) % 4 === 0) P(x, H0 + 4 + (x % 3), "#3f9449"); }
+  R(0, H0 + 7, lw, 2, "#2a6b34"); R(0, H0 + 8, lw, 1, "#4b8f3a");
+  { let hs = 99; const hr = () => { hs = (hs * 1664525 + 1013904223) >>> 0; return hs / 4294967296; };
+    for (let i = 0; i < lw / 2.2; i++) { const x = Math.floor(hr() * lw), y = H0 - 2 + Math.floor(hr() * 9); P(x, y, hr() < 0.5 ? "#ffd0e0" : "#fff6c8"); } }
 
   // 草地
   const L0 = H0 + 9;
@@ -690,6 +909,9 @@ function drawGarden() {
     if (t > 0.6) P(x, y - 1, "#7ccf5c");
   }
 
+  // 小屋位置 = 小徑盡頭；先畫屋影落草地（之後小徑同木階會蓋住中間）
+  const gx = Math.round(pathCx((L0 + 2) / lh) * lw), yb = L0 + 2;
+  R(gx - 25, yb, 50, 2, "#4f9f40"); R(gx - 23, yb + 2, 46, 1, "#58a845");
   // 石板小徑
   const onBand = f => f >= BAND0 && f <= BAND1;
   const stone = (x, y, edge) => {
@@ -709,16 +931,14 @@ function drawGarden() {
     }
     if (!onBand(f)) { P(x0 - 1, y, "#4b8f3a"); P(x1 + 1, y, "#4b8f3a"); }
   }
-  // 小徑盡頭嘅拱門
-  const gx = Math.round(pathCx((L0 + 2) / lh) * lw);
-  R(gx - 7, H0 - 9, 2, 16, "#8a5a36"); R(gx + 6, H0 - 9, 2, 16, "#8a5a36"); R(gx - 7, H0 - 10, 15, 2, "#a06a40");
-  for (let k = 0; k < 9; k++) P(gx - 7 + k * 2 + (k % 2), H0 - 9 + (k % 3), k % 2 ? "#ff7fa6" : "#ffd6e2");
+  // 小徑盡頭：北歐小屋（用 mkSprite 畫，貼落背景，同其他道具一樣有描邊）
+  c.drawImage(makeCottage(), gx - COT.CX - 1, yb - COT.GY - 1);
 
   // 小花（平面，貼地）
   const offPath = (x, y, pad) => { const f = y / lh; return !(f >= BAND0 - 0.02 && f <= BAND1 + 0.02) && Math.abs(x / lw - pathCx(f)) > pathHw(f) + pad; };
   const petals = ["#ff6f91", "#ffd23f", "#ffffff", "#b784ff", "#ff9a3c"];
   const fl = [];
-  for (let i = 0; i < 230; i++) { const y = L0 + 3 + rnd() * (lh - L0 - 4), x = rnd() * lw; if (offPath(x, y, 0.015)) fl.push({ x: x, y: y, col: Math.floor(rnd() * 5) }); }
+  for (let i = 0; i < 230; i++) { const y = L0 + 3 + rnd() * (lh - L0 - 4), x = rnd() * lw; if (offPath(x, y, 0.015) && !(y < yb + 8 && Math.abs(x - gx) < 30)) fl.push({ x: x, y: y, col: Math.floor(rnd() * 5) }); }
   fl.sort((a, b) => a.y - b.y);
   fl.forEach(o => {
     const t = (o.y - L0) / (lh - L0), x = Math.round(o.x), y = Math.round(o.y), sz = t > 0.55 ? 2 : 1, col = petals[o.col];
@@ -743,6 +963,7 @@ function drawGarden() {
   }
   // 前景草邊
   for (let x = 0; x < lw; x += 2) { const h = 1 + Math.floor(rnd() * 3); R(x, lh - h, 1, h, "#3f8f35"); }
+  placeCottageLights(gx, yb, lw, lh);
   initFx();
   buildStars(c);
   applyTime();
@@ -1251,8 +1472,8 @@ const SCENES = {
     await pose(T, "coax", "「謝謝你～」");
   },
   nap: async T => {
-    const lp = lampProps.length ? pick(lampProps) : null;
-    if (lp) { await goto(T, spotBeside(lp, Math.random() < 0.5 ? -1 : 1), pick(["「路燈下面最暖了～」", "「搵個舒服嘅地方瞓覺～」"])); faceToward(lp); }
+    await goto(T, toTL(HOUSE.xf + 0.015, HOUSE.f + 0.022), pick(["「返屋企瞓覺～」", "「我嘅小屋最暖了～」"]));
+    face(houseProp.xf * innerWidth - (pos.x + size() / 2));
     await pose(T, "waiting", "「好睏喵……」", 2000);
     await pose(T, "lying", "「呼啊～（大大的喊露）」", 2200);
     const lines = ["「Zzz...（反肚大睡）」", "「Zzz... 呼嚕嚕...」", "「夢到小魚乾……自己游過來了……」", "「Zzz...Zita...生日快樂...Zzz」"];
