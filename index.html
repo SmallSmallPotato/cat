@@ -202,12 +202,31 @@
       radial-gradient(1px 1px at 66% 74%, #fff 99%, transparent), radial-gradient(1px 1px at 24% 80%, #cfe0ff 99%, transparent),
       radial-gradient(1.5px 1.5px at 90% 58%, #fff 99%, transparent), radial-gradient(ellipse at 50% 42%, #231f5e, #07061a 72%); }
   #intro.go { opacity: 0; pointer-events: none; }
-  #env { position: relative; width: min(58vw, 230px); aspect-ratio: 3 / 2; background: #ffe9b8; box-shadow: 0 0 0 4px #7a3b8f, 6px 6px 0 4px #b78ad0, 0 0 40px rgba(255,215,90,.45);
-    animation: envbob 2.2s ease-in-out infinite; }
-  #env::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 64%; background: #ff9ec0; transform-origin: 50% 0;
-    clip-path: polygon(0 0, 100% 0, 50% 100%); transition: transform .55s ease-in; z-index: 2; }
-  #env::after { content: "✦"; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 30px; color: #ffd75a; z-index: 3;
-    text-shadow: 0 0 10px #ffb938; animation: twk 1.2s ease-in-out infinite; }
+  #env { position: relative; isolation: isolate; width: min(58vw, 230px); aspect-ratio: 3 / 2;
+    background:
+      linear-gradient(145deg, transparent 49.2%, rgba(191,126,107,.42) 49.6% 50.4%, transparent 50.8%),
+      linear-gradient(35deg, transparent 49.2%, rgba(191,126,107,.32) 49.6% 50.4%, transparent 50.8%),
+      radial-gradient(ellipse at 50% 48%, #fff8df 0 13%, transparent 14%),
+      linear-gradient(135deg, #fff2ce, #f7c9b8 52%, #f5d9a8);
+    border: 2px solid #fff0c4; box-sizing: border-box;
+    box-shadow: 0 0 0 3px #8e5a91, 0 0 0 6px rgba(255,226,165,.75),
+      7px 8px 0 5px rgba(111,62,123,.65), 0 0 28px rgba(255,215,120,.72), 0 0 65px rgba(255,235,180,.32),
+      inset 0 0 0 2px rgba(255,255,255,.85), inset 0 -10px 18px rgba(175,91,100,.15);
+    animation: envbob 2.2s ease-in-out infinite, envshine 3.8s ease-in-out infinite; }
+  #env::before { content: ""; position: absolute; left: -1px; right: -1px; top: -1px; height: 67%;
+    background: linear-gradient(160deg, #fff0d1 0%, #ffc1d2 42%, #e98eae 100%);
+    border: 1px solid rgba(255,248,220,.95); transform-origin: 50% 0;
+    clip-path: polygon(0 0, 100% 0, 50% 100%); transition: transform .55s ease-in; z-index: 2;
+    filter: drop-shadow(0 3px 2px rgba(111,54,88,.28)); }
+  #env::after { content: "✦"; position: absolute; left: 50%; top: 51%; width: 43px; height: 43px;
+    display: grid; place-items: center; box-sizing: border-box; border-radius: 50%;
+    transform: translate(-50%, -50%); font-size: 25px; color: #fff2b2; z-index: 3;
+    background: radial-gradient(circle at 35% 28%, #fff8d8 0 5%, #e8b95f 18%, #b87954 58%, #8c526b 100%);
+    border: 2px solid #fff0b6; outline: 2px solid rgba(255,220,135,.65);
+    box-shadow: 0 0 0 4px rgba(157,91,111,.25), 0 0 16px rgba(255,210,100,.95), inset 0 0 5px #fff;
+    text-shadow: 0 0 8px #fff2a8; animation: twk 1.2s ease-in-out infinite; }
+  @keyframes envshine { 0%,100% { filter: brightness(1) drop-shadow(0 0 0 rgba(255,255,255,0)); }
+    50% { filter: brightness(1.13) drop-shadow(0 0 9px rgba(255,242,190,.8)); } }
   #intro.go #env::before { transform: rotateX(180deg); }
   #intro p { margin: 0; font-size: 20px; font-weight: bold; letter-spacing: 5px; text-shadow: 0 0 10px rgba(255,215,90,.8); animation: blink 1.4s ease-in-out infinite; }
   #intro small { display: block; margin-top: 10px; font-size: 12px; letter-spacing: 2px; opacity: .7; }
