@@ -686,9 +686,7 @@ function makeCottage() {
 /* ---- 貓咪嘅北歐貓屋 ---- */
 const CAT = { CX: 24, GY: 50 };
 const CATHOUSE_GLOWS = [
-  { x: CAT.CX, y: CAT.GY - 8, w: 12 },                         // 圓拱門入面嘅暖光（由 20 調暗至 12）
-  { x: CAT.CX + 11.5, y: CAT.GY - 11.5, w: 7 },                // 小窗（由 12 調暗至 7）
-  { x: CAT.CX, y: CAT.GY + 3, w: 14, h: 4, pool: true }        // 門前光影（由 24, 6 調暗至 14, 4）
+  { x: CAT.CX + 11.5, y: CAT.GY - 11.5, w: 6 }                 // 只保留小窗，並將 w 調小（例如由 12 改為 6）嚟將光調暗
 ];
 function makeCatHouse() {
   const CX = CAT.CX, GY = CAT.GY, N = NORD;
