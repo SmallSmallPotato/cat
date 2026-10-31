@@ -683,13 +683,12 @@ function makeCottage() {
     logs.forEach((row, ri) => { for (let i = 0; i < row[2]; i++) { const x = row[0] + i * 2; R(x, row[1], 2, 2, (i + ri) % 2 ? "#9a6c3c" : "#b98a52"); P(x, row[1], "#e8c58f"); } });
   }, "#4a2a30");
 }
-
 /* ---- 貓咪嘅北歐貓屋 ---- */
 const CAT = { CX: 24, GY: 50 };
 const CATHOUSE_GLOWS = [
-  { x: CAT.CX, y: CAT.GY - 8, w: 20 },                         // 圓拱門入面嘅暖光
-  { x: CAT.CX + 11.5, y: CAT.GY - 11.5, w: 12 },               // 小窗
-  { x: CAT.CX, y: CAT.GY + 3, w: 24, h: 6, pool: true }        // 門前光影
+  { x: CAT.CX, y: CAT.GY - 8, w: 12 },                         // 圓拱門入面嘅暖光（由 20 調暗至 12）
+  { x: CAT.CX + 11.5, y: CAT.GY - 11.5, w: 7 },                // 小窗（由 12 調暗至 7）
+  { x: CAT.CX, y: CAT.GY + 3, w: 14, h: 4, pool: true }        // 門前光影（由 24, 6 調暗至 14, 4）
 ];
 function makeCatHouse() {
   const CX = CAT.CX, GY = CAT.GY, N = NORD;
@@ -699,7 +698,7 @@ function makeCatHouse() {
     ["X.X....", "XXX....", ".XX....", ".XXX..X", ".XXXXXX", ".XXXXX."].forEach((row, ry) => {
       for (let rx = 0; rx < row.length; rx++) if (row[rx] === "X") P(CX - 2 + rx, GY - 45 + ry, N.iron);
     });
-    P(CX - 2, GY - 44, "#ffd24a");                                                  // 一隻金色眼
+    P(CX - 2, GY - 44, "#ffd24a");                                                           // 一隻金色眼
     // 山牆 + 屋頂
     nordGable(R, P, CX, GY - 20, 18, 4, 1.5, 15);
     // 山牆心形通風口
@@ -717,6 +716,7 @@ function makeCatHouse() {
       P(x, y, lit && y < GY - 3 ? "#a3604a" : ((x - CX) % 4 === 0 && y < GY - 3) ? "#5b3338" : base);
     }
     P(CX - 1, GY - 14, N.iron); R(CX - 1, GY - 13, 2, 2, "#fff6cf"); P(CX - 1, GY - 11, "#ffd36e");   // 吊燈
+    E(CX, GY - 3, 5, 2.2, "#fff0dc"); E(CX, GY - 2.4, 4.5, 1.2, "#ffd0e0"); P(CX - 2, GY - 4, "#ffffff"); P(CX + 1, GY - 4, "#ffffff");   // 軟墊
     P(CX - 1, GY - 3, "#ff7fa6"); P(CX, GY - 3, "#ff7fa6");
     // 左：掛牌（貓爪印）
     const px = CX - 14, py = GY - 14;
