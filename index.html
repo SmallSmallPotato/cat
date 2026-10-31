@@ -89,6 +89,9 @@
   /* ---------- 場景物件 ---------- */
   .prop { position: absolute; pointer-events: none; }
   .prop canvas { display: block; width: 100%; height: 100%; }
+  .prop::before { content: ""; position: absolute; left: 3%; right: 3%; bottom: -3%; height: 10%; border-radius: 50%; z-index: -1;
+    background: radial-gradient(ellipse at center, rgba(28,64,24,.38) 0, rgba(28,64,24,.2) 55%, rgba(28,64,24,0) 76%); }
+  .prop.nosh::before { display: none; }
   .flame { position: absolute; width: 10%; height: 15%; transform: translate(-50%, -100%); transition: opacity .2s;
     clip-path: polygon(50% 0, 100% 62%, 82% 100%, 18% 100%, 0 62%);
     background: linear-gradient(#fff6b0, #ffb21f 55%, #ff6a1f);
@@ -323,15 +326,15 @@ async function wait(ms, tok) {
 /* ========== 花園座標系 ========== */
 // 腳嘅位置用「畫面高度比例 f」表示，f 越大越近
 const FMIN = 0.46, FMAX = 0.95, BAND0 = 0.84, BAND1 = 0.96, MIN_SCALE = 0.4;
-const pathCx = f => 0.5 + 0.2 * Math.sin((f - 0.4) * 9);
-const pathHw = f => 0.04 + 0.1 * Math.max(0, (f - 0.4) / 0.6);
+const pathCx = f => 0.5 + 0.12 * Math.sin((f - 0.465) * 9);
+const pathHw = f => 0.055 + 0.08 * Math.max(0, (f - 0.465) / 0.535);
 const kOf = f => MIN_SCALE + (1 - MIN_SCALE) * clamp((f - FMIN) / (FMAX - FMIN), 0, 1);
 const toTL = (xFrac, f) => ({ x: xFrac * innerWidth - size() / 2, y: f * innerHeight - size() });
 const curF = () => (pos.y + size()) / innerHeight;
 
-const CAKE = { xf: 0.78, f: 0.68, mult: 0.8 };
-const HOUSE = { xf: 0.19, f: 0.68, mult: 0.92 };      // 貓咪嘅北歐貓屋
-const GIFT = { xf: 0.33, f: 0.76, mult: 1.05 };       // 禮物放喺貓屋門前不遠
+const CAKE = { xf: 0.835, f: 0.72, mult: 0.8 };
+const HOUSE = { xf: 0.19, f: 0.70, mult: 0.8 };      // 貓咪嘅北歐貓屋
+const GIFT = { xf: 0.28, f: 0.81, mult: 0.95 };       // 禮物放喺貓屋門前不遠
 const inZone = (xf, f) =>
   (Math.abs(xf - CAKE.xf) < 0.17 && Math.abs(f - CAKE.f) < 0.09) ||
   (Math.abs(xf - GIFT.xf) < 0.14 && Math.abs(f - GIFT.f) < 0.08) ||
@@ -788,24 +791,20 @@ function buildProps() {
   let seed = 4242; const r = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
   const bushes = [["#ff6f91", "#ffd23f"], ["#ffffff", "#ffd23f"], ["#b784ff", "#ff9a3c", "#ff6f91"]].map((fs, i) => makeBush(fs, 777 + i * 31));
   const lampCv = makeLamp();
-  [0.57, 0.64, 0.71, 0.78].forEach((f, i) => {
-    const xf = pathCx(f) + (i % 2 ? -1 : 1) * (pathHw(f) + 0.03);
-    if (!inZone(xf, f)) { const lp = addProp(copyCv(lampCv), xf, f, 0.9); lp.lamp = true; mkGlows(lp); lampProps.push(lp); }
-  });
-  const placed = []; let tries = 0;
-  while (placed.length < 9 && tries < 300) {
-    tries++;
-    const f = 0.5 + r() * 0.3, xf = 0.04 + r() * 0.92;
-    if (Math.abs(xf - pathCx(f)) < pathHw(f) + 0.09) continue;
-    if (inZone(xf, f)) continue;
-    if (placed.some(q => Math.abs(q[0] - xf) < 0.13 && Math.abs(q[1] - f) < 0.07)) continue;
-    placed.push([xf, f]);
-  }
-  placed.forEach((q, i) => addProp(copyCv(bushes[i % 3]), q[0], q[1], 0.85));
+  // 路燈：兩對，左右對稱企喺小徑兩旁
+  [0.575, 0.78].forEach(f => [-1, 1].forEach(sd => {
+    const xf = pathCx(f) + sd * (pathHw(f) + 0.04);
+    const lp = addProp(copyCv(lampCv), xf, f, 0.9); lp.lamp = true; mkGlows(lp); lampProps.push(lp);
+  }));
+  // 灌木：小屋兩側、貓屋旁邊、左右邊緣、前景角落（唔阻住小徑同貓咪行走）
+  [[0.14, 0.505, 0.8], [0.86, 0.505, 0.8], [0.045, 0.62, 0.72], [0.94, 0.61, 0.72],
+   [0.41, 0.665, 0.62], [0.08, 0.83, 0.85], [0.93, 0.825, 0.8]]
+    .forEach((q, i) => addProp(copyCv(bushes[i % 3]), q[0], q[1], q[2]));
   houseProp = addProp(makeCatHouse(), HOUSE.xf, HOUSE.f, HOUSE.mult);
   houseProp.sg = mkSpriteGlows(CATHOUSE_GLOWS);
   giftProp = addProp(makeGift(), GIFT.xf, GIFT.f, GIFT.mult);
   cakeProp = addProp(makeCake(), CAKE.xf, CAKE.f, CAKE.mult);
+  cakeProp.el.classList.add("nosh");
   [10, 14, 18].forEach((x, i) => {
     const fl = document.createElement("div"); fl.className = "flame";
     fl.style.left = ((x + 1.5) / 30 * 100) + "%"; fl.style.top = (5 / 27 * 100) + "%";
@@ -906,6 +905,15 @@ function drawGarden() {
     if (t > 0.6) P(x, y - 1, "#7ccf5c");
   }
 
+  const mk = sd => () => { sd = (sd * 1664525 + 1013904223) >>> 0; return sd / 4294967296; };
+  // 草地陽光斑：幾片柔和嘅淺色光斑，令大草地唔會死板
+  [[0.2, 0.6, 20, 6], [0.8, 0.56, 22, 6], [0.5, 0.78, 26, 5]].forEach(q => {
+    const cx0 = Math.round(q[0] * lw), cy0 = Math.round(q[1] * lh);
+    for (let yy = -q[3]; yy <= q[3]; yy++) {
+      const half = Math.round(q[2] * Math.sqrt(1 - (yy / q[3]) * (yy / q[3])));
+      R(cx0 - half, cy0 + yy, half * 2, 1, "rgba(255,255,190,0.07)");
+    }
+  });
   // 小屋位置 = 小徑盡頭；先畫屋影落草地（之後小徑同木階會蓋住中間）
   const gx = Math.round(pathCx((L0 + 2) / lh) * lw), yb = L0 + 2;
   R(gx - 25, yb, 50, 2, "#4f9f40"); R(gx - 23, yb + 2, 46, 1, "#58a845");
@@ -919,6 +927,7 @@ function drawGarden() {
   };
   for (let y = L0 + 2; y < lh; y++) {
     const f = y / lh;
+    if (f > BAND1 + 0.003) break;
     let x0, x1;
     if (onBand(f)) { x0 = 0; x1 = lw - 1; }
     else { x0 = Math.round((pathCx(f) - pathHw(f)) * lw); x1 = Math.round((pathCx(f) + pathHw(f)) * lw); }
@@ -928,8 +937,38 @@ function drawGarden() {
     }
     if (!onBand(f)) { P(x0 - 1, y, "#4b8f3a"); P(x1 + 1, y, "#4b8f3a"); }
   }
+  const petals0 = ["#ff6f91", "#ffd23f", "#ffffff", "#b784ff", "#ff9a3c"];
+  // 走廊緣石 + 小徑兩旁草邊
+  { const dr = mk(321), y0 = Math.round(BAND0 * lh), y1 = Math.round(BAND1 * lh);
+    for (let x = 0; x < lw; x++) {
+      P(x, y0 + 1, "#f3e6c2"); P(x, y1 - 1, "#c9b080"); P(x, y1 + 1, "#3f8a35");
+      if (dr() < 0.14) P(x, y0 - 1, "#7ccf5c");
+      if (dr() < 0.14) P(x, y1 + 2, "#7ccf5c");
+    }
+    for (let y = L0 + 3; y < y0 - 1; y++) {
+      const f = y / lh, xa = Math.round((pathCx(f) - pathHw(f)) * lw), xb = Math.round((pathCx(f) + pathHw(f)) * lw);
+      if (dr() < 0.22) { P(xa - 2 - Math.floor(dr() * 2), y, "#7ccf5c"); P(xa - 2, y - 1, "#56ab55"); }
+      if (dr() < 0.22) { P(xb + 2 + Math.floor(dr() * 2), y, "#7ccf5c"); P(xb + 2, y - 1, "#56ab55"); }
+      if (dr() < 0.05) { const col = petals0[Math.floor(dr() * 5)]; P(xa - 3, y - 1, col); P(xa - 3, y, "#3a8a3a"); }
+      if (dr() < 0.05) { const col = petals0[Math.floor(dr() * 5)]; P(xb + 3, y - 1, col); P(xb + 3, y, "#3a8a3a"); }
+    }
+  }
   // 小徑盡頭：北歐小屋（用 mkSprite 畫，貼落背景，同其他道具一樣有描邊）
   c.drawImage(makeCottage(), gx - COT.CX - 1, yb - COT.GY - 1);
+  // 小屋門前兩邊花壇
+  [[gx - 19, gx - 13], [gx + 9, gx + 17]].forEach((rg, bi) => {
+    const cols = bi ? ["#ffd23f", "#b784ff", "#ffffff", "#ff9a3c"] : ["#ff7fa6", "#ffffff", "#ffd23f", "#ff7fa6"];
+    R(rg[0], yb, rg[1] - rg[0] + 1, 1, "#936640"); R(rg[0], yb + 1, rg[1] - rg[0] + 1, 1, "#7a5230");
+    for (let x = rg[0]; x <= rg[1]; x++) { if ((x - rg[0]) % 2 === 0) { P(x, yb - 1, "#3f9a3f"); P(x, yb - 2, cols[((x - rg[0]) >> 1) % cols.length]); } else P(x, yb - 1, "#2f7d3f"); }
+  });
+  // 貓屋門前嘅踏腳石：由貓屋一路連到主小徑
+  { const hx = HOUSE.xf * lw, hy = Math.round(HOUSE.f * lh) + 3, f2 = HOUSE.f + 0.015;
+    const ex = (pathCx(f2) - pathHw(f2) - 0.012) * lw;
+    for (let i = 0; i < 7; i++) {
+      const t = i / 6, x = Math.round(hx + 4 + (ex - hx - 4) * t), y = hy + Math.round(Math.sin(t * Math.PI));
+      R(x - 2, y, 4, 2, "#e8d6a8"); P(x - 2, y, "#f3e6c2"); R(x - 2, y + 2, 4, 1, "#a98a5c");
+    }
+  }
 
   // 小花（平面，貼地）
   const offPath = (x, y, pad) => { const f = y / lh; return !(f >= BAND0 - 0.02 && f <= BAND1 + 0.02) && Math.abs(x / lw - pathCx(f)) > pathHw(f) + pad; };
@@ -947,7 +986,7 @@ function drawGarden() {
   // 野餐墊（蛋糕放喺上面）
   {
     const S = size(), k = kOf(CAKE.f), unit = innerHeight / lh;
-    const bw = Math.max(16, Math.round(S * k * CAKE.mult * 2.4 / unit)), hh = Math.max(4, Math.round(bw * 0.32));
+    const bw = Math.max(16, Math.round(S * k * CAKE.mult * 1.8 / unit)), hh = Math.max(4, Math.round(bw * 0.32));
     const cx = Math.round(CAKE.xf * lw), cy = Math.round(CAKE.f * lh), top = cy - Math.round(hh * 0.6);
     for (let r = 0; r < hh; r++) {
       const w = bw * (0.78 + 0.22 * r / (hh - 1)), x0 = Math.round(cx - w / 2), x1 = Math.round(cx + w / 2);
@@ -957,9 +996,21 @@ function drawGarden() {
         P(x, top + r, edge ? "#c9485f" : chk ? "#fff7ef" : "#ff8da1");
       }
     }
+    // 墊底影 + 左邊曲奇碟 + 右邊茶杯
+    R(Math.round(cx - bw * 0.36), top + hh, Math.round(bw * 0.72), 1, "#4a9a3c");
+    const px1 = Math.round(cx - bw * 0.4), py1 = top + Math.round(hh * 0.42);
+    R(px1, py1, 3, 2, "#fff0d4"); P(px1, py1, "#e0a96a"); P(px1 + 2, py1 + 1, "#e0a96a"); R(px1, py1 + 2, 3, 1, "#c3bde0");
+    const px2 = Math.round(cx + bw * 0.28), py2 = top + Math.round(hh * 0.4);
+    R(px2, py2, 2, 2, "#ffffff"); P(px2, py2, "#ff8da1"); P(px2 + 2, py2 + 1, "#ffffff"); R(px2 + 3, py2, 2, 2, "#ffffff"); P(px2 + 3, py2, "#8fd8ff");
   }
   // 前景草邊
   for (let x = 0; x < lw; x += 2) { const h = 1 + Math.floor(rnd() * 3); R(x, lh - h, 1, h, "#3f8f35"); }
+  { const fr = mk(808), yF = Math.round(BAND1 * lh) + 4;
+    for (let i = 0; i < 16; i++) {
+      const x = Math.floor(fr() * lw), y = yF + Math.floor(fr() * (lh - yF - 3)), col = petals0[Math.floor(fr() * 5)];
+      R(x, y - 2, 1, 3, "#3a8a3a"); P(x, y - 4, col); P(x - 1, y - 3, col); P(x + 1, y - 3, col); P(x, y - 3, "#ffe38a");
+    }
+  }
   placeCottageLights(gx, yb, lw, lh);
   initFx();
   buildStars(c);
