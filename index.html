@@ -1556,24 +1556,24 @@ function nightFx(t, dt, lw, lh, px) {
 const SCENES = {
   greet: async T => {
     if (!bdayReached) {
-      await pose(T, "wave", "「Zita～嘰哩喺度陪你等生日喵～！」", 3200);
-      await pose(T, "happy", "「11月9號 00:00，神秘盒仔先可以打開！」");
+      await pose(T, "wave", "「Zita～嘰哩喺度陪你等生日喵～」", 3200);
+      await pose(T, "happy", "「11月9號 00:00，神秘盒仔先可以打開～」");
       return;
     }
-    await pose(T, "wave", "「Zita，生日快樂喵～！」", 3200);
-    await pose(T, "happy", "「今日要食大蛋糕！」");
+    await pose(T, "wave", "「Zita，生日快樂喵～」", 3200);
+    await pose(T, "happy", "「今日要食大蛋糕～」");
   },
   stretch: async T => {
     await pose(T, "waiting", "「喵？」");
     await pose(T, "stretch1", "「嗯……伸個懶腰」");
-    await pose(T, "stretch2", "「> <！」");
+    await pose(T, "stretch2", "「> <」");
     await pose(T, "waiting", "「拉筋先～」");
   },
   wander: async T => {
     await goto(T, randPos(), pick(["「去邊度好呢～」", "「巡視一下地盤～」", "「走走走～」", "「再行多兩步～」"]));
   },
   lucky: async T => {
-    await pose(T, "rich", "「招財貓上身！」");
+    await pose(T, "rich", "「招財貓上身」");
     await pose(T, "waiting", "「呼嚕嚕……」");
     await pose(T, "normal", "「嗯……」");
   },
@@ -1590,21 +1590,21 @@ const SCENES = {
   lookout: async T => {
     await pose(T, "waiting", "「嗯……？」");
     await pose(T, "stand", "「企直睇吓出邊有啲咩先。」");
-    await pose(T, "wave", "「Hello!」");
+    await pose(T, "wave", "「Hello～」");
     await pose(T, "stand", "「好似冇咩特別……」");
     await pose(T, "waiting", "「返回原位繼續發呆。」");
   },
   sassy: async T => {
     await pose(T, "scorn", "「哼……你睇緊啲咩？」");
     await pose(T, "meow", "「喵喵！快陪我玩啦！」");
-    await pose(T, "angry", "「打爆你！」");
+    await pose(T, "angry", "「打爆你！！」");
     await pose(T, "scorn", "「哼……」");
   },
   cake: async T => {
     if (cakeDone || !bdayReached) return;            // 吹蠟燭只會有一次，而且要生日到咗先有蛋糕
     cakeDone = true;
     candlesLit();
-    await goto(T, spotBeside(cakeProp, -1), "「咦？好香嘅味道呀～」");
+    await goto(T, spotBeside(cakeProp, -1), "「咦？好似好香嘅味道～」");
     faceToward(cakeProp);
     await pose(T, "curious", "「蛋糕！！」");
     await pose(T, "happy", "「蠟燭好靚靚～」");
