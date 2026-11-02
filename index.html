@@ -309,7 +309,7 @@
   <canvas id="tint"></canvas>
   <canvas id="fx"></canvas>
   <div id="dim"></div><canvas id="cele"></canvas><canvas id="gold"></canvas><div id="cakeHint"></div>
-  <div id="bdayTag"><div class="bt">🎂 蛋糕開箱倒數</div><div class="bc"><div class="u"><b class="n-d">00</b><i>日</i></div><div class="u"><b class="n-h">00</b><i>時</i></div><div class="u"><b class="n-m">00</b><i>分</i></div><div class="u us"><b class="n-s">00</b><i>秒</i></div></div><div class="bf">11月9日 00:00 開封</div></div>
+  <div id="bdayTag"><div class="bt">🎁 開箱倒數</div><div class="bc"><div class="u"><b class="n-d">00</b><i>日</i></div><div class="u"><b class="n-h">00</b><i>時</i></div><div class="u"><b class="n-m">00</b><i>分</i></div><div class="u us"><b class="n-s">00</b><i>秒</i></div></div><div class="bf">11月9日 00:00 開封</div></div>
   <div id="bigCount"></div><div id="bigMsg"></div><div id="flash"></div>
 </div>
 <div id="intro"><div id="env"></div><p>點擊開啟<small>🔊 建議開聲音 (手機要開啟鈴聲掣)</small><small id="introCd"></small></p></div>
@@ -395,10 +395,10 @@ function leftWords() {
   return d >= 1 ? d + " 日" : h >= 1 ? h + " 個鐘" : m >= 1 ? m + " 分鐘" : s + " 秒";
 }
 /* 未到生日之前，「生日快樂」一律說成「預祝生日快樂」 */
-function preSay(t) { return (!bdayReached && t) ? t.replace(/(預祝)?生日快樂/g, "預祝生日快樂") : t; }
+function preSay(t) { return (!bdayReached && t) ? t.replace(/(預祝)?生日快樂/g, "預祝生日快樂").replace(/蛋糕/g, "甜點") : t; }
 function preBdayPokes() {
   const w = leftWords();
-  return ["「仲有 " + w + "就生日喇～！」", "「野餐墊上面嗰個盒仔好神秘喵～」", "「11月9號 00:00，記得準時嚟拆蛋糕！」", "「我哋一齊等倒數～」", "「盒仔入面好似有蛋糕味……」"];
+  return ["「仲有 " + w + "就生日喇～！」", "「野餐墊上面嗰個盒仔好神秘喵～」", "「11月9號 00:00，記得準時嚟拆盒仔！」", "「我哋一齊等倒數～」", "「盒仔入面好似有好香嘅味道……」"];
 }
 const HOUSE = { xf: 0.19, f: 0.70, mult: 0.8 };      // 貓咪嘅北歐貓屋
 const GIFT = { xf: 0.28, f: 0.81, mult: 0.95 };       // 禮物放喺貓屋門前不遠
@@ -1557,7 +1557,7 @@ const SCENES = {
   greet: async T => {
     if (!bdayReached) {
       await pose(T, "wave", "「Zita～嘰哩喺度陪你等生日喵～！」", 3200);
-      await pose(T, "happy", "「11月9號 00:00，神秘蛋糕就會出現！」");
+      await pose(T, "happy", "「11月9號 00:00，神秘盒仔先可以打開！」");
       return;
     }
     await pose(T, "wave", "「Zita，生日快樂喵～！」", 3200);
@@ -2092,7 +2092,7 @@ SCENES.ending = async T => {
   storyMode = false;
   if (!bdayReached) {
     await pose(T, "wave", "「好啦～Zita，生日快樂喵～」", 3400);
-    await pose(T, "happy", "「記住 11月9號 00:00 返嚟拆蛋糕～」", 3800);
+    await pose(T, "happy", "「記住 11月9號 00:00 返嚟開箱～」", 3800);
     await pose(T, "coax", "「可以隨便玩～點點本喵、點點畫面、點點盒仔！」", 3400);
     return;
   }
@@ -2114,7 +2114,7 @@ function updateTag(ms) {
   const s = Math.max(0, Math.floor(ms / 1000)), d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60), sc = s % 60;
   tagN.d.textContent = pad2(d); tagN.h.textContent = pad2(h); tagN.m.textContent = pad2(m); tagN.s.textContent = pad2(sc);
   tagEl.classList.toggle("hot", s < 3600);
-  if (introCd) introCd.textContent = "🎂 蛋糕倒數　" + pad2(d) + " 日 " + pad2(h) + ":" + pad2(m) + ":" + pad2(sc);
+  if (introCd) introCd.textContent = "🎁 開箱倒數　" + pad2(d) + " 日 " + pad2(h) + ":" + pad2(m) + ":" + pad2(sc);
 }
 function placeBdayTag() {
   if (bdayReached || !boxProp || !boxProp.w) return;
@@ -2123,7 +2123,7 @@ function placeBdayTag() {
   tagEl.style.display = "block";
   const w = tagEl.offsetWidth, cx = L + boxProp.w / 2;
   const left = Math.min(innerWidth - w / 2 - 6, Math.max(w / 2 + 6, cx));
-  tagEl.style.left = left + "px"; tagEl.style.top = (boxProp.f * innerHeight + size() * kOf(boxProp.f) * 0.2 + 10) + "px"; tagEl.style.zIndex = Math.round(boxProp.f * innerHeight);   // 擺喺野餐墊下面，唔遮住貓咪嘅說話
+  tagEl.style.left = left + "px"; tagEl.style.top = (boxProp.f * innerHeight + size() * kOf(boxProp.f) * 0.2 + 10) + "px"; tagEl.style.zIndex = (lampProps.length ? Math.max.apply(null, lampProps.map(p => parseInt(p.el.style.zIndex, 10) || 0)) : Math.round(0.78 * innerHeight)) + 1;   // 擺喺野餐墊下面，唔遮住貓咪嘅說話
   tagEl.style.setProperty("--ax", (cx - (left - w / 2)) + "px");
 }
 function hideTag() { tagEl.style.display = "none"; if (introCd) introCd.style.display = "none"; }
