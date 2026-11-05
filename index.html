@@ -2410,7 +2410,7 @@ SCENES.peek = async T => {
   await goto(T, spotBeside(boxProp, 1), "「咦？野餐墊上面有個神秘盒仔～」");
   faceToward(boxProp);
   await pose(T, "curious", "「好似好香喎……入面係咩呢？」");
-  await pose(T, "play", "「（伸隻貓爪輕輕碰一碰）」", 1500);
+  await pose(T, "play", "「掂吓先」", 1500);
   boxWiggle(); if (AC) sfx.pop();
   await pose(T, "fear", "「！盒仔自己郁咗！！」");
   await pose(T, "waiting", "「仲有 " + leftWords() + " 先可以打開，要忍住喵～」", 3200);
