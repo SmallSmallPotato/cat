@@ -405,10 +405,14 @@ const BDAY_MS = (function () {
   const m = /[?&]left=(\d+)/.exec(location.search);
   if (m) return Date.now() + parseInt(m[1], 10) * 1000;
   if (/[?&]bday=1/.test(location.search)) return Date.now() - 1000;
+  if (/[?&]bday=2/.test(location.search)) return Date.now() - 2 * 86400000;   // 測試「生日已過」
   return new Date("2026-11-09T00:00:00+08:00").getTime();
 })();
 let bdayReached = Date.now() >= BDAY_MS, lifeStartedAt = 0, boxProp = null;
 const msLeft = () => BDAY_MS - Date.now();
+/* 生日階段：pre = 未到；day = 生日當天（11月9日，香港時間，可無限重開儀式）；post = 過咗生日（只剩蛋糕 + 熄咗嘅蠟燭） */
+const BDAY_END = BDAY_MS + 86400000;
+const bdayMode = () => !bdayReached ? "pre" : (Date.now() < BDAY_END ? "day" : "post");
 function leftWords() {
   const s = Math.max(0, Math.ceil(msLeft() / 1000)), d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60);
   return d >= 1 ? d + " 日" : h >= 1 ? h + " 個鐘" : m >= 1 ? m + " 分鐘" : s + " 秒";
@@ -981,17 +985,19 @@ function buildBox() {
   boxProp.el.addEventListener("click", () => onBox());
   if (bdayReached) boxProp.el.style.display = "none";
   else { cakeProp.el.style.display = "none"; if (cakeGlow) cakeGlow.style.setProperty("--on", "0"); }
+  if (bdayReached && bdayMode() === "post") candlesOut(true);   // 過咗生日：蛋糕仲喺度，蠟燭已經熄咗
 }
 function candlesLit() {
   if (cakeGlow) cakeGlow.style.setProperty("--on", "1");
   cakeProp && cakeProp.el.querySelectorAll(".flame.out").forEach(f => f.classList.remove("out"));
 }
-function candlesOut() {
+function candlesOut(quiet) {
   if (!cakeProp) return;
   if (cakeGlow) cakeGlow.style.setProperty("--on", "0");
   cakeProp.el.querySelectorAll(".flame").forEach(f => {
     if (f.classList.contains("out")) return;
     f.classList.add("out");
+    if (quiet) return;
     const s = document.createElement("div"); s.className = "smoke";
     s.style.left = f.style.left; s.style.top = f.style.top; cakeProp.el.appendChild(s);
     const a = s.animate([
@@ -1274,7 +1280,7 @@ function confettiAt(px, py, n) {
 }
 function fxTick(now) {
   requestAnimationFrame(fxTick);
-  const dt = Math.min(0.05, (now - lastT) / 1000); lastT = now;
+  const dt = Math.max(0, Math.min(0.05, (now - lastT) / 1000)); lastT = now;
   const t = now / 1000, lw = fx.width, lh = fx.height;
   timeTick(dt, t);
   fctx.clearRect(0, 0, lw, lh);
@@ -1323,9 +1329,15 @@ function fxTick(now) {
   nightFx(t, dt, lw, lh, px);
 }
 
-/* ========== 時間流逝：破曉 → 清晨 → 中午 → 下午 → 黃昏 → 夜晚 → 破曉 ========== */
+/* ========== 時間流逝（進場由真實時間開始）：破曉 → 清晨 → 中午 → 下午 → 黃昏 → 夜晚 → 破曉 ========== */
 const DAY_LEN = 180;   // 一日 24 小時 = 真實 180 秒
-const START_HOUR = (function () { const m = /[?&]t=(\d+(?:\.\d+)?)/.exec(location.search); return m ? parseFloat(m[1]) % 24 : 19.5; })();
+const realHour = () => { const d = new Date(); return d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600; };
+const START_HOUR = (function () { const m = /[?&]t=(\d+(?:\.\d+)?)/.exec(location.search); return m ? parseFloat(m[1]) % 24 : realHour(); })();
+/* 時鐘顯示：exact = 劇情播放期間（時間靜止）顯示真實時間，精細到分鐘；quarter = 劇情完咗之後自動快進，每 15 分鐘一格；hour = 手動快轉後，每按一下快進 1 小時、每小時一格
+   生日當天（香港時間 11月9日）：所有快進凍結，時間同真實時間完全同步（用 ?t= 測試時唔鎖定） */
+const HAS_T = /[?&]t=/.test(location.search);
+const timeLocked = () => !HAS_T && bdayMode() === "day";
+let clockMode = "exact", liveSynced = false, clockMsgUntil = 0, clockMsgT = 0;
 const PHASES = [["dawn", 4.5, "破曉", "🌄"], ["morning", 6.5, "清晨", "🌤️"], ["noon", 10, "中午", "☀️"], ["afternoon", 14, "下午", "🌞"], ["dusk", 17.5, "黃昏", "🌇"], ["night", 19.5, "夜晚", "🌙"]];
 function phaseIdx(h) { let k = PHASES.length - 1; if (h >= PHASES[0][1]) for (let i = 0; i < PHASES.length; i++) if (h >= PHASES[i][1]) k = i; return k; }
 let clock = START_HOUR, skip = 0, NIGHT = 0, DAYA = 1, starA = 0, curPhase = phaseIdx(START_HOUR), phaseQueue = [];
@@ -1408,20 +1420,42 @@ function applyTime() {
   sunPos.style.opacity = clamp((alt + 0.08) / 0.22, 0, 1).toFixed(2);
   sunWrapEl.style.filter = "hue-rotate(" + (-low * 30).toFixed(0) + "deg) saturate(" + (1 + low * 0.5).toFixed(2) + ")";
   moonPos.style.opacity = clamp((Math.sin(moonPh()) + 0.08) / 0.22, 0, 1).toFixed(2);
-  const k = phaseIdx(clock), hh = Math.floor(clock), mm = Math.floor((clock - hh) * 6) * 10;
-  const str = PHASES[k][3] + " " + PHASES[k][2] + " " + String(hh).padStart(2, "0") + ":" + String(mm).padStart(2, "0") + " ⏩";
-  if (str !== lastClockStr) { lastClockStr = str; clockBtn.textContent = str; }
+  const k = phaseIdx(clock);
+  let hh, mm;
+  if (clockMode === "exact") { hh = Math.floor(clock + 1e-9); mm = Math.min(59, Math.floor((clock - hh) * 60)); }
+  else if (clockMode === "quarter") { const qh = Math.floor(clock * 4 + 1e-6) / 4; hh = Math.floor(qh); mm = Math.round((qh - hh) * 60); }
+  else { hh = Math.floor(clock + 1e-6); mm = 0; }
+  hh %= 24;
+  const str = PHASES[k][3] + " " + PHASES[k][2] + " " + String(hh).padStart(2, "0") + ":" + String(mm).padStart(2, "0") + (timeLocked() ? "" : " ⏩");
+  if (str !== lastClockStr && performance.now() >= clockMsgUntil) { lastClockStr = str; clockBtn.textContent = str; }
 }
 clockBtn.addEventListener("click", () => {
-  const k = (phaseIdx(clock) + 1) % PHASES.length;
-  let d = PHASES[k][1] - clock; if (d <= 0) d += 24;
-  skip = d;
+  if (!cardOpened) return;
+  if (timeLocked()) {                                                                         // 生日當天：時間實時，唔可以快轉
+    clockBtn.animate([{ transform: "translateX(0)" }, { transform: "translateX(-3px)" }, { transform: "translateX(3px)" }, { transform: "translateX(-2px)" }, { transform: "translateX(0)" }], { duration: 320 });
+    clockBtn.textContent = "🔒 生日當日・時間實時進行"; clockMsgUntil = performance.now() + 1800;
+    clearTimeout(clockMsgT); clockMsgT = setTimeout(() => { lastClockStr = ""; applyTime(); }, 1850);
+    return;
+  }
+  if (clockMode !== "hour") { clockMode = "hour"; skip = 0; lastClockStr = ""; }               // 手動快轉 → 轉為每小時進制
+  if (skip > 0) skip += 1;                                                                    // 連按：一下 +1 小時
+  else skip = Math.floor(clock + 1e-6) + 1 - clock;                                           // 快進到下一個整點
 });
 
 function timeTick(dt, t) {
-  let adv = storyMode ? 0 : dt * 24 / DAY_LEN;
+  let adv = 0;
+  if (timeLocked()) {                                        // 生日當天：同真實時間完全同步，凍結所有快進
+    if (!liveSynced) { liveSynced = true; clock = realHour(); curPhase = phaseIdx(clock); phaseQueue = []; lastClockStr = ""; }
+    clock = realHour(); skip = 0; clockMode = "exact";
+  } else {
+    liveSynced = false;
+    if (!storyMode) {                                        // 劇情完咗（最後一幕開始）：自動快進到下一個 15 分鐘，之後每 15 分鐘一格
+      if (clockMode === "exact") { clockMode = "quarter"; lastClockStr = ""; skip = Math.max(skip, Math.ceil(clock * 4 - 1e-6) / 4 - clock); }
+      adv = dt * 24 / DAY_LEN;
+    }
+  }
   if (skip > 0) { const d = Math.min(skip, dt * 10); adv += d; skip -= d; }
-  clock = (clock + adv) % 24;
+  clock = ((clock + adv) % 24 + 24) % 24;
   accT += dt;
   if (skip > 0 || accT > 0.1) { accT = 0; applyTime(); }
   const k = phaseIdx(clock);
@@ -1617,6 +1651,11 @@ function nightFx(t, dt, lw, lh, px) {
 /* ========== 劇本（一場一場，隨機又唔重複） ========== */
 const SCENES = {
   greet: async T => {
+    if (bdayMode() === "post") {
+      await pose(T, "wave", "「Zita～嘰哩依家都喺度陪你喵～」", 3200);
+      await pose(T, "happy", "「蛋糕仲喺度，蠟燭就已經熄咗～」");
+      return;
+    }
     if (!bdayReached) {
       await pose(T, "wave", "「Zita～嘰哩喺度陪你等生日喵～」", 3200);
       await pose(T, "happy", "「11月9號 00:00，神秘盒仔先可以打開～」");
@@ -1663,8 +1702,7 @@ const SCENES = {
     await pose(T, "scorn", "「哼……」");
   },
   cake: async T => {
-    if (cakeDone || !bdayReached) return;            // 吹蠟燭只會有一次，而且要生日到咗先有蛋糕
-    cakeDone = true;
+    if (cakeDone || bdayMode() !== "day") return;    // 只喺生日當天做儀式；吹熄蠟燭（celebrate）之後先算完成
     candlesLit();
     await goto(T, spotBeside(cakeProp, -1), "「咦？好似好香嘅味道～」");
     faceToward(cakeProp);
@@ -1674,6 +1712,7 @@ const SCENES = {
     await pose(T, "coax", "「許個願望吧～」");
     await pose(T, "waiting", "「（閉上眼睛許願……許完點一點蛋糕吹蠟燭！）」", 2200);
     await waitBlow(T, 16000);
+    cakeDone = true;
     await pose(T, "happy", "「願望一定會實現！」");
     await pose(T, "rich", "「蛋糕要分我一口喔～」");
   },
@@ -1714,11 +1753,12 @@ const SCENES = {
     await pose(T, "waiting", "「嗯……天邊變粉紅色了？」");
     await pose(T, "stretch1", "「天光啦～伸個大懶腰」");
     await pose(T, "stretch2", "「> <！」", 1400);
-    await pose(T, "wave", "「Zita，早呀！新的一歲，從今天開始～」", 3200);
+    const m = bdayMode();
+    await pose(T, "wave", m === "day" ? "「Zita，早呀！新的一歲，從今天開始～」" : m === "pre" ? "「Zita，早呀！仲有 " + leftWords() + "就生日喇～」" : "「Zita，早呀！今日都要開開心心喵～」", 3200);
   },
   ph_morning: async T => {
     await pose(T, "happy", "「清晨的空氣，聞起來像剛出爐的蛋糕～」");
-    await pose(T, "wave", "「Zita 的生日，要從大大的早晨開始！」", 3000);
+    await pose(T, "wave", bdayMode() === "day" ? "「Zita 的生日，要從大大的早晨開始！」" : "「Zita，今日都要開開心心喵～」", 3000);
   },
   ph_noon: async T => {
     await pose(T, "happy", "「太陽在頭頂，好暖～」");
@@ -1737,7 +1777,7 @@ const SCENES = {
     await pose(T, "curious", "「星星出來了喵～」");
     await pose(T, "waiting", "「好眼瞓……」");
     if (!bdayReached) await SCENES.peek(T);
-    else if (!cakeDone) await SCENES.cake(T);   // 只喺未吹過蠟燭嘅夜晚先會出現
+    else if (!cakeDone) await SCENES.cake(T);   // 只喺生日當天、未吹過蠟燭先會出現（cake 內部會檢查）
   }
 };
 
@@ -1748,7 +1788,7 @@ function chooseScene(last) {
   if (n > 0.25) w.nap = n > 0.5 ? 5 : 1.2;
   if (n > 0.5) { w.stargaze = 2.4; w.cake = 2; w.wander = .5; w.sassy = .3; w.lucky = .4; w.lookout = .6; }
   if (h >= 10 && h < 16) w.sunbathe = 1.6;
-  if (cakeDone || !bdayReached || !(h >= 20 || h < 1.5)) w.cake = 0;   // 蛋糕只喺夜晚、而且只得一次
+  if (cakeDone || bdayMode() !== "day") w.cake = 0; else w.cake = Math.max(w.cake, 6);   // 生日當天、未吹過就優先（白天都得）
   const names = Object.keys(w).filter(k => w[k] > 0 && !last.includes(k));
   let tot = 0; names.forEach(k => tot += w[k]);
   let r = Math.random() * tot;
@@ -1787,7 +1827,7 @@ async function special(tok) {
 async function life(tok, startWithSpecial, firstQueue) {
   try {
     if (startWithSpecial) await special(tok);
-    const queue = firstQueue ? firstQueue.slice() : startWithSpecial ? [] : (bdayReached ? ["greet", "cake", "ending"] : ["greet", "peek", "ending"]);
+    const queue = firstQueue ? firstQueue.slice() : startWithSpecial ? [] : (bdayMode() === "day" ? ["greet", "cake", "ending"] : bdayMode() === "post" ? ["greet", "ending"] : ["greet", "peek", "ending"]);
     const last = [];
     while (true) {
       const n = 4 + Math.floor(Math.random() * 3);
@@ -1813,7 +1853,8 @@ function restart(startWithSpecial, firstQueue) {
   gen++;
   sprite.style.transform = ""; shadow.style.transform = "";
   cat.style.transition = "opacity .6s"; cat.style.opacity = "1";
-  if (bdayReached && !cakeDone) candlesLit(); moving = false; catAway = false;
+  if (bdayMode() === "day" && !cakeDone) candlesLit();
+  moving = false; catAway = false;
   life(gen, startWithSpecial, firstQueue);
 }
 
@@ -1984,8 +2025,8 @@ function goldBurst(full) {
 }
 
 /* 星星連成 ZITA HBD */
-function buildConst() {
-  const W = innerWidth, H = innerHeight, txt = "ZITA HBD", h = Math.min(H * .2, W * .9 / 6.9), lw = h * .62, gap = h * .32, sp = h * .5, step = Math.max(9, h * .2);
+function buildConst(dense) {
+  const W = innerWidth, H = innerHeight, txt = "ZITA HBD", h = Math.min(H * .2, W * .9 / 6.9), lw = h * .62, gap = h * .32, sp = h * .5, step = dense ? Math.max(5.5, h * .085) : Math.max(9, h * .2);
   let tot = -gap; [...txt].forEach(c => tot += c === " " ? sp : lw + gap);
   let x = (W - tot) / 2; const y0 = H * .09, pts = [], segs = [];
   const add = (px, py, v) => { const s = stars.length ? pick(stars) : null;
@@ -2018,10 +2059,80 @@ function drawGold(dt) {
   }
   gX.globalAlpha = 1;
 }
+/* ===== 白天版：櫻花龍捲風 → 空中砌出 ZITA HBD → 風吹散 ===== */
+const PT_COLS = ["#ff6f9c", "#ff8fb0", "#ff5c8a", "#ffa0bd", "#ff7fa6", "#ffc2d6"];
+const PT = { A: 2.2, B: 4.0, BL: 7.6, END: 10.4 };   // 龍捲風上升 / 成字完成 / 開始吹散 / 結束（秒）
+function buildPetalConst() {
+  buildConst(true);
+  const W = innerWidth, H = innerHeight, c = cakeXY();
+  const mk = (ex) => ({ h0: Math.random(), vh: rand(.28, .42), th0: rand(0, 6.283), om: rand(2.6, 4.2), rs: rand(.55, 1.1),
+    ph: rand(0, 6.283), d: rand(0, .55), col: pick(PT_COLS), sz: rand(.8, 1.25), ex: ex, tx: 0, ty: 0, bd: 0 });
+  CS.petal = true; CS.segs = []; CS.bx = c.x; CS.end = 0;
+  CS.rx = clamp(Math.min(H * .2, W * .9 / 6.9) * .075, 3.2, 6);
+  CS.P = CS.pts.map(q => Object.assign(mk(false), { tx: q.tx, ty: q.ty, bd: q.tx / W * .9 + rand(0, .25) }));
+  for (let i = 0; i < 170; i++) CS.P.push(mk(true));
+  CS.gust = []; for (let i = 0; i < 22; i++) CS.gust.push({ y: rand(H * .05, H * .75), len: rand(40, 120), d: rand(0, 1), sp: rand(.9, 1.3) });
+}
+function petalFunnel(p, u, freeze) {
+  const W = innerWidth, H = innerHeight, yB = H * .9, yT = H * .2;
+  const g = clamp(u / PT.A, 0, 1), cx = CS.bx + (W / 2 - CS.bx) * (g * g * (3 - 2 * g));
+  const h = (p.h0 + (freeze ? PT.A : u) * p.vh) % 1;
+  const r = (5 + Math.min(W * .22, 150) * Math.pow(h, 1.35)) * p.rs;
+  const th = p.th0 + u * p.om * (1.6 - h * .6);
+  return { x: cx + Math.cos(th) * r, y: yB - h * (yB - yT) + Math.sin(th) * r * .22, h: h };
+}
+function drawPetals(t) {
+  const W = innerWidth, H = innerHeight;
+  if (CS.t0 === null) return;
+  const u = t - CS.t0, fadeIn = clamp(u / .5, 0, 1), edge = h => clamp(Math.min(h, 1 - h) * 7, 0, 1);
+  cX.globalCompositeOperation = "source-over";
+  // 風線（最後吹散嗰陣由左掠到右）
+  if (u > PT.BL - .2) {
+    cX.lineCap = "round"; cX.lineWidth = 1.4;
+    CS.gust.forEach(g => {
+      const v = (u - PT.BL + .2 - g.d * .9) * g.sp; if (v <= 0 || v > 1.7) return;
+      const x = -g.len + v * (W + g.len * 2) / 1.7;
+      cX.globalAlpha = .38 * Math.sin(Math.min(1, v / 1.7) * Math.PI);
+      cX.strokeStyle = "#ffffff"; cX.beginPath(); cX.moveTo(x - g.len, g.y); cX.lineTo(x, g.y - 3); cX.stroke();
+    });
+  }
+  cX.strokeStyle = "rgba(170,40,90,.6)"; cX.lineWidth = .8;
+  CS.P.forEach(p => {
+    let x, y, al, spin = p.ph + t * (p.ex ? 5 : 2);
+    if (p.ex) {
+      const f = petalFunnel(p, u, false); x = f.x; y = f.y; al = edge(f.h) * (1 - clamp((u - PT.A) / 1, 0, 1));
+    } else {
+      const f = petalFunnel(p, u, u > PT.A), q = clamp((u - PT.A - p.d) / 1.2, 0, 1), e = 1 - Math.pow(1 - q, 3);
+      x = f.x + (p.tx - f.x) * e; y = f.y + (p.ty - f.y) * e; al = edge(f.h) * (1 - e) + e;
+      const sw = clamp((u - (PT.A + p.d + 1.2)) / .6, 0, 1);               // 成字後輕輕搖擺
+      x += Math.sin(t * 1.7 + p.ph) * 1.3 * sw; y += Math.cos(t * 1.3 + p.ph) * 1 * sw;
+      const v = u - PT.BL - p.bd;
+      if (v > 0) { x += 60 * v + 150 * v * v; y += -40 * v + Math.sin(v * 6 + p.ph) * 16 * Math.min(v, 1.5); al *= 1 - clamp(v / 1.5, 0, 1); spin += v * 8; }
+    }
+    al *= fadeIn; if (al <= .01) return;
+    const fl = .55 + .45 * Math.abs(Math.cos(t * 3 + p.ph));
+    cX.save(); cX.translate(x, y); cX.rotate(spin); cX.globalAlpha = al; cX.fillStyle = p.col;
+    cX.beginPath(); cX.ellipse(0, 0, CS.rx * p.sz, CS.rx * .62 * p.sz * fl, 0, 0, 6.283); cX.fill(); cX.stroke();
+    cX.restore();
+  });
+  cX.globalAlpha = 1;
+}
+async function petalCelebrate() {
+  buildPetalConst();
+  CS.t0 = performance.now() / 1000;
+  sfx.wind(2.6); say("「哇～起風喇！」");
+  setTimeout(() => say("「櫻花飄起來了～」"), 1500);
+  setTimeout(() => { sfx.fanfare(); say("「哇！櫻花寫字了～！」"); for (let i = 0; i < 7; i++) setTimeout(() => sfx.ping(i), i * 200); setTimeout(() => sfx.chord(), 1500); }, (PT.A + 1.3) * 1000);
+  setTimeout(() => { sfx.wind(2.6); say("「呼～風帶走咗願望～」"); }, PT.BL * 1000);
+  await sleep(PT.END * 1000);
+  bgmTo(1);
+  CS = null; celebrating = false;
+}
 function drawCele(t) {
   const W = innerWidth, H = innerHeight;
   cX.setTransform(DPR, 0, 0, DPR, 0, 0); cX.clearRect(0, 0, W, H);
   if (!CS) return;
+  if (CS.petal) { drawPetals(t); return; }
   const fade = CS.end ? clamp(1 - (t - CS.end) / 1.3, 0, 1) : 1, ba = clamp((t - CS.born) / .25, 0, 1) * fade;
   cX.globalCompositeOperation = "lighter"; cX.fillStyle = "#fff";
   stars.forEach(s => { cX.globalAlpha = ba * (.4 + .6 * Math.abs(Math.sin(t * s.sp + s.ph)));
@@ -2043,21 +2154,25 @@ function drawCele(t) {
 }
 function celeLoop(now) {
   if (!loopOn) return; requestAnimationFrame(celeLoop);
-  const dt = Math.min(.05, (now - lastL) / 1000); lastL = now;
+  const dt = Math.max(0, Math.min(.05, (now - lastL) / 1000)); lastL = now;
   drawGold(dt); drawCele(now / 1000);
   if (!celebrating && !GP.length) { loopOn = false; cX.clearRect(0, 0, innerWidth, innerHeight); gX.clearRect(0, 0, innerWidth, innerHeight); }
 }
 function startLoop() { if (loopOn) return; loopOn = true; lastL = performance.now(); requestAnimationFrame(celeLoop); }
 
 async function celebrate() {
-  if (celebrating) return; celebrating = true;
+  if (celebrating) return; celebrating = true; cakeDone = true;
   candlesOut(); hideHint(); wishReady = false; startLoop(); bgmTo(0); sfx.poof();
   cakeProp.el.animate([{ transform: "scale(1)" }, { transform: "scale(1.08,.94)", offset: .3 }, { transform: "scale(.97,1.04)", offset: .6 }, { transform: "none" }], { duration: 420 });
-  if (starA < 0.85) skip = (20.5 - clock + 24) % 24;     // 未夜晚：喺暗場期間自動快轉去夜晚
-  buildConst(); dimEl.className = "on"; sfx.beat();
+  if (starA < 0.85) {                                    // 白天：櫻花龍捲風，唔快轉時間
+    await petalCelebrate();
+    phaseQueue = []; curPhase = phaseIdx(clock);
+    return;
+  }
+  buildConst(); dimEl.className = "on"; sfx.beat();     // 夜晚：星星連成字
   setTimeout(() => say("「呼～願望一定會成真……」"), 100);
   await sleep(1000);                                   // 突然轉暗 1 秒
-  for (let i = 0; i < 60 && (skip > 0 || starA < 0.85); i++) await sleep(50);
+  for (let i = 0; i < 60 && skip > 0; i++) await sleep(50);
   phaseQueue = []; curPhase = phaseIdx(clock);
   CS.t0 = performance.now() / 1000; goldBurst(true); sfx.fanfare(); say("「哇！星星寫字了～！」");
   for (let i = 0; i < 7; i++) setTimeout(() => sfx.ping(i), 1300 + i * 230);
@@ -2094,6 +2209,16 @@ const sfx = {
   meow() { const t = T0(); tone(700, t, .13, "triangle", .11, 1150); tone(1150, t + .13, .2, "triangle", .1, 620); },
   ding() { const t = T0(); tone(MN(84), t, .35, "sine", .12); tone(MN(91), t + .08, .45, "sine", .08); },
   tick() { tone(MN(88), T0(), .07, "square", .05); },
+  wind(d) {            // 風聲：帶通濾波白噪音，頻率一上一落
+    if (!AC) return;
+    const t = T0(), n = Math.floor(AC.sampleRate * d), buf = AC.createBuffer(1, n, AC.sampleRate), data = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) data[i] = Math.random() * 2 - 1;
+    const src = AC.createBufferSource(); src.buffer = buf;
+    const f = AC.createBiquadFilter(); f.type = "bandpass"; f.Q.value = .8;
+    f.frequency.setValueAtTime(300, t); f.frequency.exponentialRampToValueAtTime(1400, t + d * .6); f.frequency.exponentialRampToValueAtTime(500, t + d);
+    const g = AC.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.22, t + d * .45); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+    src.connect(f); f.connect(g); g.connect(master); src.start(t);
+  },
   chord() { const t = T0(); [72, 76, 79, 84].forEach(n => tone(MN(n), t, 1.4, "triangle", .09)); }
 };
 /* 童話八音盒（G 大調 6/8，輕快柔和）：10 小節循環
@@ -2144,6 +2269,8 @@ document.addEventListener("visibilitychange", () => { if (AC) document.hidden ? 
 
 function openCard() {
   if (cardOpened) return; cardOpened = true;
+  if (!/[?&]t=/.test(location.search)) { clock = realHour(); curPhase = phaseIdx(clock); phaseQueue = []; }   // 入場一刻 = 當時真實時間
+  clockMode = "exact"; lastClockStr = ""; applyTime();
   audioInit(); sfx.open(); bgmStart();
   const it = document.getElementById("intro"); it.classList.add("go");
   setTimeout(() => it.remove(), 1200);
@@ -2156,6 +2283,11 @@ SCENES.ending = async T => {
     await pose(T, "wave", "「好啦～Zita，生日快樂喵～」", 3400);
     await pose(T, "happy", "「記住 11月9號 00:00 返嚟開箱～」", 3800);
     await pose(T, "coax", "「可以隨便玩～點點本喵、點點畫面、點點盒仔！」", 3400);
+    return;
+  }
+  if (bdayMode() === "post") {
+    await pose(T, "wave", "「好啦～Zita，繼續開心喵～」", 3400);
+    await pose(T, "coax", "「可以隨便玩～點點本喵、點點畫面！」", 3200);
     return;
   }
   await pose(T, "wave", "「好啦～Zita，今年都要開心喵～」", 3400);
@@ -2256,10 +2388,11 @@ function liveReveal() {
   showMsg("Zita 生日快樂！", 3400);
   if (lifeStartedAt) restart(false, ["reveal", "cake", "ending"]);
 }
-let lastTickAt = Date.now(), precountOn = false;
+let lastTickAt = Date.now(), precountOn = false, postDone = false;
 function bdayTick() {
   const now = Date.now(), gap = now - lastTickAt; lastTickAt = now;
   { const pe = document.getElementById("parade"); if (pe) pe.style.setProperty("--ng", Math.min(1, Math.max(0, (NIGHT - 0.2) / 0.6)).toFixed(2)); }
+  if (bdayReached && !postDone && now >= BDAY_END && !celebrating) { postDone = true; candlesOut(true); }
   if (bdayReached) return;
   const ms = BDAY_MS - now;
   if (ms <= 0) { if (cardOpened && !document.hidden && gap < 1500 && !celebrating) liveReveal(); else showCake(); return; }
@@ -2308,6 +2441,7 @@ SCENES.reveal = async T => {
 };
 
 /* ========== 啟動 ========== */
+if (timeLocked()) document.getElementById("hint").textContent = "✨　生日當日，時間與真實時間同步";
 drawGarden();
 buildProps();
 buildClouds();
@@ -2330,7 +2464,7 @@ addEventListener("resize", () => {
 let hiddenAt = 0;
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) { hiddenAt = Date.now(); }
-  else if (hiddenAt && Date.now() - hiddenAt > 3000) { restart(true); }
+  else if (hiddenAt && Date.now() - hiddenAt > 3000) { restart(true, bdayMode() === "day" && !cakeDone ? ["cake"] : undefined); }
 });
 </script>
 </body>
